@@ -1,0 +1,1 @@
+add_library(LILC_CORE lex.c lex.h util.c util.h)
