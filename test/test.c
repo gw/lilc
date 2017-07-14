@@ -21,6 +21,6 @@ test_lexer(const char *src_path, const char *want_path) {
 int
 main() {
     // Run tests
-    test_lexer("lexer/add_2.lilc", "lexer/add_2.out");
+    test_lexer("lexer/add_2.lilc", "lexer/add_2.lexout");
 }
 
