@@ -1,1 +1,1 @@
-add_library(LILC_CORE lex.c lex.h util.c util.h)
+add_library(LILC_CORE ast.c ast.h lex.c lex.h parse.c parse.h token.c token.h util.c util.h)
