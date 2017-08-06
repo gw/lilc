@@ -1,0 +1,1 @@
+add_library(CFU cfu.c cfu.h cfuhash.c cfuhash.h cfustring.c cfustring.h)

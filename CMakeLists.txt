@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.8.2)
 project(Lilc)
-add_subdirectory(src)
 
+add_subdirectory(src)
+add_subdirectory(lib)
 enable_testing()
 add_subdirectory(test)
 
