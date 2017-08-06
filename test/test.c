@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "codegen.h"
 #include "lex.h"
 #include "parse.h"
 #include "ast.h"
@@ -52,12 +54,36 @@ test_parser(char *src_path, char *want_path) {
     free(want);
 }
 
+static void
+test_codegen(char *src_path) {
+    char *src = read_file(src_path);
+
+    struct lexer lex;
+    struct parser parse;
+    lexer_init(&lex, src);
+    parser_init(&parse, &lex);
+
+    struct lilc_node_t *node;
+    node = program(&parse);
+
+    lilc_codegen(node, "emitted.o");
+
+    free(src);
+}
+
 int
 main() {
+    // Lexer
     test_lexer("lexer/add_2.lilc", "lexer/add_2.tok");
     test_lexer("lexer/add_sub.lilc", "lexer/add_sub.tok");
 
+    // Parer
     test_parser("lexer/add_2.lilc", "parser/add_2.ast");
     test_parser("lexer/add_sub.lilc", "parser/add_sub.ast");
+
+    // Codegen
+    test_codegen("lexer/add_sub.lilc");
+
+    return 0;
 }
 
