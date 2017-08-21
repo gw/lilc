@@ -11,6 +11,7 @@
 #include "cfuhash.h"
 
 #include "ast.h"
+#include "codegen.h"
 #include "token.h"
 
 // Forward declaration
@@ -18,9 +19,63 @@ static LLVMValueRef
 do_codegen(struct lilc_node_t *node, LLVMModuleRef module, LLVMBuilderRef builder,
            cfuhash_table_t *named_vals);
 
-// Top-level driver function for all codegen-related operations.
+
+// JIT an AST and return its result
 void
-lilc_codegen(struct lilc_node_t *node, char *out_path) {
+lilc_jit(struct lilc_node_t *node) {
+    // LLVM setup
+    LLVMModuleRef module = LLVMModuleCreateWithName("lilc_jit");
+    LLVMBuilderRef builder = LLVMCreateBuilder();
+    LLVMInitializeAllTargetInfos();
+    LLVMInitializeAllTargets();
+    LLVMInitializeAllTargetMCs();
+    LLVMInitializeAllAsmParsers();
+    LLVMInitializeAllAsmPrinters();
+
+    // JIT setup
+    LLVMExecutionEngineRef engine;
+    LLVMLinkInMCJIT();
+    char *msg;
+    if(LLVMCreateExecutionEngineForModule(&engine, module, &msg) == 1) {
+        fprintf(stderr, "Could not create execution engine: %s\n", msg);
+        LLVMDisposeMessage(msg);
+        exit(1);
+    }
+
+    // Wrap provided node in a 'main' function.
+    // TODO: require user to provide a main function,
+    // once function definitions are implemented in the frontend
+    struct lilc_proto_node_t *proto = lilc_proto_node_new("main", NULL, 0);
+    node = (struct lilc_node_t *)lilc_funcdef_node_new(proto, node);
+
+    // Walk AST and generate code
+    // named_vals keeps track of which values are defined in the current
+    // scope and what their LLVM representations are. Basically a symbol table.
+    // Currently, this will only store function parameters--to be accessed when
+    // generating code for a function body.
+    cfuhash_table_t *named_vals = cfuhash_new_with_initial_size(64);
+    LLVMValueRef val = do_codegen(node, module, builder, named_vals);
+    if (!val) {
+        fprintf(stderr, "\nCodegen Failed. Exiting.\n");
+        exit(1);
+    }
+
+    // JIT and execute, storing result
+    LLVMGenericValueRef result = LLVMRunFunction(engine, val, 0, NULL);
+    fprintf(stderr, "Evaluated to: %d\n", (int)LLVMGenericValueToInt(result, 0));
+
+    // Print IR
+    fprintf(stderr, "Module Dump: \n");
+    LLVMDumpModule(module);
+
+    // Clean up
+    LLVMDisposeBuilder(builder);
+    LLVMDisposeModule(module);
+}
+
+// Emit a native object file at `path`, given an AST
+void
+lilc_emit(struct lilc_node_t *node, char *path) {
     // LLVM setup
     LLVMModuleRef module = LLVMModuleCreateWithName("lilc");
     LLVMBuilderRef builder = LLVMCreateBuilder();
@@ -48,7 +103,11 @@ lilc_codegen(struct lilc_node_t *node, char *out_path) {
         exit(1);
     }
 
-    // Emit a native object file from the generated LLVMIR
+    // Emit a native object file to *path
+    if (path == NULL) {
+        fprintf(stderr, "Path for emitted file not provided\n");
+        exit(1);
+    }
     LLVMTargetRef target;
     LLVMBool rc;
     char *triple, *err;
@@ -70,7 +129,7 @@ lilc_codegen(struct lilc_node_t *node, char *out_path) {
     rc = LLVMTargetMachineEmitToFile(
         machine,
         module,
-        out_path,
+        path,
         LLVMObjectFile,
         // LLVMAssemblyFile,
         &err
