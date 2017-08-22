@@ -4,6 +4,8 @@
 enum tok_type {
     LILC_TOK_EOS,
     LILC_TOK_SEMI,
+    LILC_TOK_LPAREN,
+    LILC_TOK_RPAREN,
     LILC_TOK_ADD,
     LILC_TOK_SUB,
     LILC_TOK_MUL,

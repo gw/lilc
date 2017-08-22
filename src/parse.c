@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "ast.h"
 #include "lex.h"
 #include "parse.h"
@@ -6,7 +9,7 @@
 // Interface for parsing-related functionality for each token type.
 struct vtable {
     int lbp;  // Left Binding Power
-    struct lilc_node_t *(*as_prefix)(struct token t);
+    struct lilc_node_t *(*as_prefix)(struct parser *p, struct token t);
     struct lilc_node_t *(*as_infix)(struct parser *p, struct token t, struct lilc_node_t *left);
     void (*repr)(void);
 };
@@ -22,8 +25,18 @@ static struct lilc_node_t *expression(struct parser *p, int rbp);
  */
 
 // int
-static struct lilc_node_t *int_prefix(struct token t) {
+static struct lilc_node_t *int_prefix(struct parser *p, struct token t) {
     return (struct lilc_node_t *)lilc_int_node_new(t.val.as_int);
+}
+
+// "("
+static struct lilc_node_t *lparen_prefix(struct parser *p, struct token t) {
+    struct lilc_node_t *result = expression(p, 0);
+    if (!lexer_advance(p->lex, LILC_TOK_RPAREN)) {
+        fprintf(stderr, "Expected ')', got: %s", lilc_token_str[p->lex->tok.cls]);
+        exit(1);
+    }
+    return result;
 }
 
 // "+", "-", "*", "/"
@@ -38,6 +51,10 @@ struct vtable vtables[] = {
     },
     [LILC_TOK_SEMI] = {
         .lbp = 0,
+    },
+    [LILC_TOK_LPAREN] = {
+        .lbp = 0,
+        .as_prefix = lparen_prefix,
     },
     [LILC_TOK_ADD] = {
         .lbp = 1,
@@ -64,9 +81,8 @@ expression(struct parser *p, int rbp) {
     struct lilc_node_t *left;
 
     t = p->lex->tok;
-    left = vtables[t.cls].as_prefix(t);
-
     lexer_scan(p->lex);
+    left = vtables[t.cls].as_prefix(p, t);
 
     while (rbp < vtables[p->lex->tok.cls].lbp) {  // "precedence climbing"!
         t = p->lex->tok;

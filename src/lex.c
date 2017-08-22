@@ -44,6 +44,8 @@ lexer_scan(struct lexer *lex) {
             case '\n':  // TODO incr line number for debugging
             case '\t': continue;
             case ';': return set_tok_type(lex, LILC_TOK_SEMI);
+            case '(': return set_tok_type(lex, LILC_TOK_LPAREN);
+            case ')': return set_tok_type(lex, LILC_TOK_RPAREN);
             case '+': return set_tok_type(lex, LILC_TOK_ADD);
             case '-': return set_tok_type(lex, LILC_TOK_SUB);
             case '*': return set_tok_type(lex, LILC_TOK_MUL);
@@ -53,6 +55,19 @@ lexer_scan(struct lexer *lex) {
                 fprintf(stderr, "Unrecognized input char: '%c'\n", c);
                 exit(1);
         }
+    }
+}
+
+// Assert current token type.
+// If assertion passes, returns 1 and advances lexer
+// Otherwise returns 0 and does not adavnce lexer
+int
+lexer_advance(struct lexer *lex, enum tok_type t) {
+    if (lex->tok.cls == t) {
+        lexer_scan(lex);
+        return 1;
+    } else {
+        return 0;
     }
 }
 

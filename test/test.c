@@ -81,9 +81,11 @@ int
 main() {
     // Lexer
     test_lexer("src_examples/arith_basic.lilc", "lexer/arith_basic.tok");
+    test_lexer("src_examples/arith_parens.lilc", "lexer/arith_parens.tok");
 
     // Parser
     test_parser("src_examples/arith_basic.lilc", "parser/arith_basic.ast");
+    test_parser("src_examples/arith_parens.lilc", "parser/arith_parens.ast");
 
     // Codegen
     test_codegen("src_examples/arith_basic.lilc", "codegen/arith_basic.result");
