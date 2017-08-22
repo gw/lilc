@@ -68,6 +68,10 @@ struct vtable vtables[] = {
         .lbp = 2,
         .as_infix = bin_op_infix,
     },
+    [LILC_TOK_DIV] = {
+        .lbp = 2,
+        .as_infix = bin_op_infix,
+    },
     [LILC_TOK_DBL] = {
         .as_prefix = dbl_prefix,
     },

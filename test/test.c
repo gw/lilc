@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -72,7 +73,9 @@ test_codegen(char *src_path, char *want_path) {
     double got = lilc_eval(node);
     double d_want = strtod(want, NULL);
     // fprintf(stderr, "Eval got: %f\n", got);
-    assert(got == d_want);
+
+    double e = 0.000001;
+    assert(fabs(got - d_want) < e);
 
     free(src);
     free(want);

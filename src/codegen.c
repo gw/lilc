@@ -177,6 +177,9 @@ codegen_binop(struct lilc_bin_op_node_t *node, LLVMModuleRef module,
         case LILC_TOK_MUL: {
             return LLVMBuildFMul(builder, lhs, rhs, "multmp");
         }
+        case LILC_TOK_DIV: {
+            return LLVMBuildFDiv(builder, lhs, rhs, "divtmp");
+        }
     }
     return NULL;
 }
