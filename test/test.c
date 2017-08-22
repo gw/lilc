@@ -75,13 +75,10 @@ test_codegen(char *src_path) {
 int
 main() {
     // Lexer
-    test_lexer("lexer/add_sub.lilc", "lexer/add_sub.tok");
 
     // Parser
-    test_parser("lexer/add_sub.lilc", "parser/add_sub.ast");
 
     // Codegen
-    test_codegen("lexer/add_sub.lilc");
 
     return 0;
 }
