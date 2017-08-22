@@ -4,21 +4,29 @@
 #include "lex.h"
 #include "token.h"
 
-static enum tok_type set_tok_type(struct lexer *lex, enum tok_type t) {
+static enum tok_type
+set_tok_type(struct lexer *lex, enum tok_type t) {
     return lex->tok.cls = t;
 }
 
-static int set_tok_val_int(struct lexer *lex, int val) {
+static int
+set_tok_val_int(struct lexer *lex, int val) {
     return lex->tok.val.as_int = val;
 }
 
+static void
+lexer_putback(struct lexer *lex) {
+    lex->offset--;
+}
+
 // Tokenize an entire number.
-static enum tok_type consume_number(struct lexer *lex, char c) {
+static enum tok_type
+consume_number(struct lexer *lex, char c) {
     int n = 0;
     do {
         n = n * 10 + (c - '0');
     } while (isdigit(c = lex->source[lex->offset++]));
-    lex->offset--;  // put back
+    lexer_putback(lex);
 
     set_tok_val_int(lex, n);
     return set_tok_type(lex, LILC_TOK_INT);
@@ -26,7 +34,8 @@ static enum tok_type consume_number(struct lexer *lex, char c) {
 
 // Scan the next token in the source input.
 // Returns the class of the scanned token, dies on error.
-enum tok_type lexer_scan(struct lexer *lex) {
+enum tok_type
+lexer_scan(struct lexer *lex) {
     char c;
     while (1) {
         c = lex->source[lex->offset++];
@@ -71,7 +80,8 @@ tok_strm_readf(char *buf, struct lexer *lex) {
     return i;
 }
 
-void lexer_init(struct lexer *lex, char *source) {
+void
+lexer_init(struct lexer *lex, char *source) {
     lex->source = source;
     lex->offset = 0;
 }
