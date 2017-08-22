@@ -4,7 +4,8 @@
 #include <errno.h>
 #include "util.h"
 
-void die (char *file, int line, int err)
+void
+die (char *file, int line, int err)
 {
     fprintf(stderr, "%s:%d - %s\n", file, line, strerror(err));
     exit(1);
@@ -20,7 +21,8 @@ size_t file_size(FILE *f) {
 
 // Read a file into malloc'd buffer.
 // Caller must free.
-char *read_file(char *filename) {
+char *
+read_file(char *filename) {
     char *buf = NULL;
     FILE *f;
 

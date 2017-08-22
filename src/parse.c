@@ -25,12 +25,14 @@ static struct lilc_node_t *expression(struct parser *p, int rbp);
  */
 
 // double
-static struct lilc_node_t *dbl_prefix(struct parser *p, struct token t) {
+static struct lilc_node_t *
+dbl_prefix(struct parser *p, struct token t) {
     return (struct lilc_node_t *)lilc_dbl_node_new(t.val.as_dbl);
 }
 
 // "("
-static struct lilc_node_t *lparen_prefix(struct parser *p, struct token t) {
+static struct lilc_node_t *
+lparen_prefix(struct parser *p, struct token t) {
     struct lilc_node_t *result = expression(p, 0);
     if (!lexer_advance(p->lex, LILC_TOK_RPAREN)) {
         fprintf(stderr, "Expected ')', got: %s", lilc_token_str[p->lex->tok.cls]);
@@ -40,7 +42,8 @@ static struct lilc_node_t *lparen_prefix(struct parser *p, struct token t) {
 }
 
 // "+", "-", "*", "/"
-static struct lilc_node_t *bin_op_infix(struct parser *p, struct token t, struct lilc_node_t *left) {
+static struct lilc_node_t *
+bin_op_infix(struct parser *p, struct token t, struct lilc_node_t *left) {
     return (struct lilc_node_t *)lilc_bin_op_node_new(left, expression(p, vtables[t.cls].lbp), t.cls);
 }
 

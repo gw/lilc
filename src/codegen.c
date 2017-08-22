@@ -56,7 +56,7 @@ lilc_eval(struct lilc_node_t *node) {
     cfuhash_table_t *named_vals = cfuhash_new_with_initial_size(64);
     LLVMValueRef val = do_codegen(node, module, builder, named_vals);
     if (!val) {
-        fprintf(stderr, "\nCodegen Failed. Exiting.\n");
+        fprintf(stderr, "\nEval failed. Exiting.\n");
         exit(1);
     }
 
@@ -101,7 +101,7 @@ lilc_emit(struct lilc_node_t *node, char *path) {
     cfuhash_table_t *named_vals = cfuhash_new_with_initial_size(64);
     LLVMValueRef val = do_codegen(node, module, builder, named_vals);
     if (!val) {
-        fprintf(stderr, "\nCodegen Failed. Exiting.\n");
+        fprintf(stderr, "\nEmit Failed. Exiting.\n");
         exit(1);
     }
 
