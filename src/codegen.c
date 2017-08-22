@@ -21,10 +21,10 @@ do_codegen(struct lilc_node_t *node, LLVMModuleRef module, LLVMBuilderRef builde
 
 
 // JIT an AST and return its result
-void
-lilc_jit(struct lilc_node_t *node) {
+int
+lilc_eval(struct lilc_node_t *node) {
     // LLVM setup
-    LLVMModuleRef module = LLVMModuleCreateWithName("lilc_jit");
+    LLVMModuleRef module = LLVMModuleCreateWithName("lilc_eval");
     LLVMBuilderRef builder = LLVMCreateBuilder();
     LLVMInitializeAllTargetInfos();
     LLVMInitializeAllTargets();
@@ -60,9 +60,9 @@ lilc_jit(struct lilc_node_t *node) {
         exit(1);
     }
 
-    // JIT and execute, storing result
-    LLVMGenericValueRef result = LLVMRunFunction(engine, val, 0, NULL);
-    fprintf(stderr, "Evaluated to: %d\n", (int)LLVMGenericValueToInt(result, 0));
+    // Eval
+    LLVMGenericValueRef eval = LLVMRunFunction(engine, val, 0, NULL);
+    int result = (int)LLVMGenericValueToInt(eval, 0);
 
     // Print IR
     fprintf(stderr, "Module Dump: \n");
@@ -71,6 +71,8 @@ lilc_jit(struct lilc_node_t *node) {
     // Clean up
     LLVMDisposeBuilder(builder);
     LLVMDisposeModule(module);
+
+    return result;
 }
 
 // Emit a native object file at `path`, given an AST
@@ -201,7 +203,7 @@ codegen_proto(struct lilc_proto_node_t *node, LLVMModuleRef module,
         // Create argument list.
         LLVMTypeRef *params = malloc(sizeof(LLVMTypeRef) * node->arg_count);
         for (int i = 0; i < node->arg_count; i++) {
-            params[i] = LLVMInt64Type();
+            params[i] = LLVMInt64Type();  // TODO Look up types on the proto node?
         }
         // Create function type.
         LLVMTypeRef funcType = LLVMFunctionType(LLVMInt64Type(), params, node->arg_count, 0);
@@ -248,6 +250,7 @@ codegen_funcdef(struct lilc_funcdef_node_t *node, LLVMModuleRef module,
     return func;
 }
 
+// Recursively walk an AST and generate LLVM IR
 static LLVMValueRef
 do_codegen(struct lilc_node_t *node, LLVMModuleRef module,
            LLVMBuilderRef builder, cfuhash_table_t *named_vals) {

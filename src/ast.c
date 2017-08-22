@@ -32,6 +32,7 @@ lilc_bin_op_node_new(struct lilc_node_t *left, struct lilc_node_t *right, enum t
     return node;
 };
 
+// TODO add a types array arg
 struct lilc_proto_node_t *
 lilc_proto_node_new(char *name, char **args, unsigned int arg_count) {
     struct lilc_proto_node_t *node = malloc(sizeof(struct lilc_proto_node_t));
