@@ -37,6 +37,7 @@ enum tok_type lexer_scan(struct lexer *lex) {
             case ';': return set_tok_type(lex, LILC_TOK_SEMI);
             case '+': return set_tok_type(lex, LILC_TOK_ADD);
             case '-': return set_tok_type(lex, LILC_TOK_SUB);
+            case '*': return set_tok_type(lex, LILC_TOK_MUL);
             case '\0': return set_tok_type(lex, LILC_TOK_EOS);
             default:
                 if (isdigit(c)) return consume_number(lex, c);

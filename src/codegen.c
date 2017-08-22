@@ -174,6 +174,9 @@ codegen_binop(struct lilc_bin_op_node_t *node, LLVMModuleRef module,
         case LILC_TOK_SUB: {
             return LLVMBuildSub(builder, lhs, rhs, "subtmp");
         }
+        case LILC_TOK_MUL: {
+            return LLVMBuildMul(builder, lhs, rhs, "multmp");
+        }
     }
     return NULL;
 }

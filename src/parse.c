@@ -26,7 +26,7 @@ static struct lilc_node_t *int_prefix(struct token t) {
     return (struct lilc_node_t *)lilc_int_node_new(t.val.as_int);
 }
 
-// "+", "-"
+// "+", "-", "*", "/"
 static struct lilc_node_t *bin_op_infix(struct parser *p, struct token t, struct lilc_node_t *left) {
     return (struct lilc_node_t *)lilc_bin_op_node_new(left, expression(p, vtables[t.cls].lbp), t.cls);
 }
@@ -40,11 +40,15 @@ struct vtable vtables[] = {
         .lbp = 0,
     },
     [LILC_TOK_ADD] = {
-        .lbp = 10,
+        .lbp = 1,
         .as_infix = bin_op_infix,
     },
     [LILC_TOK_SUB] = {
-        .lbp = 10,
+        .lbp = 1,
+        .as_infix = bin_op_infix,
+    },
+    [LILC_TOK_MUL] = {
+        .lbp = 2,
         .as_infix = bin_op_infix,
     },
     [LILC_TOK_INT] = {
