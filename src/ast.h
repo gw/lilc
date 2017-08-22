@@ -4,7 +4,7 @@
 #include "token.h"
 
 enum node_type {
-    LILC_NODE_INT,
+    LILC_NODE_DBL,
     LILC_NODE_EXPR,
     LILC_NODE_OP_BIN,
     LILC_NODE_PROTO,
@@ -20,10 +20,10 @@ struct lilc_node_t {
     enum node_type type;
 };
 
-// Integer immediate node
-struct lilc_int_node_t {
+// Double immediate node
+struct lilc_dbl_node_t {
     struct lilc_node_t base;
-    int val;
+    double val;
 };
 
 // Binary operation node
@@ -52,8 +52,8 @@ struct lilc_funcdef_node_t {
 /*
  *Constructors
  */
-struct lilc_int_node_t *
-lilc_int_node_new(int val);
+struct lilc_dbl_node_t *
+lilc_dbl_node_new(double val);
 
 struct lilc_bin_op_node_t *
 lilc_bin_op_node_new(struct lilc_node_t *left, struct lilc_node_t *right, enum tok_type op);

@@ -11,5 +11,5 @@ char *lilc_token_str[] = {
   [LILC_TOK_ADD] = "+",
   [LILC_TOK_SUB] = "-",
   [LILC_TOK_MUL] = "*",
-  [LILC_TOK_INT] = "int",
+  [LILC_TOK_DBL] = "dbl",
 };

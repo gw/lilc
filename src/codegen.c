@@ -21,7 +21,7 @@ do_codegen(struct lilc_node_t *node, LLVMModuleRef module, LLVMBuilderRef builde
 
 
 // JIT an AST and return its result
-int
+double
 lilc_eval(struct lilc_node_t *node) {
     // LLVM setup
     LLVMModuleRef module = LLVMModuleCreateWithName("lilc_eval");
@@ -62,7 +62,7 @@ lilc_eval(struct lilc_node_t *node) {
 
     // Eval
     LLVMGenericValueRef eval = LLVMRunFunction(engine, val, 0, NULL);
-    int result = (int)LLVMGenericValueToInt(eval, 0);
+    double result = (double)LLVMGenericValueToFloat(LLVMDoubleType(), eval);
 
     // Print IR
     fprintf(stderr, "Module Dump: \n");
@@ -150,8 +150,8 @@ lilc_emit(struct lilc_node_t *node, char *path) {
 }
 
 static LLVMValueRef
-codegen_int(struct lilc_int_node_t *node) {
-    return LLVMConstInt(LLVMInt64Type(), node->val, 0);
+codegen_dbl(struct lilc_dbl_node_t *node) {
+    return LLVMConstReal(LLVMDoubleType(), node->val);
 }
 
 static LLVMValueRef
@@ -169,13 +169,13 @@ codegen_binop(struct lilc_bin_op_node_t *node, LLVMModuleRef module,
             // names like "addtmp" are just a hint here--
             // LLVM appends an auto-incrementing suffix if the
             // same name is assigned multiple times (SSA).
-            return LLVMBuildAdd(builder, lhs, rhs, "addtmp");
+            return LLVMBuildFAdd(builder, lhs, rhs, "addtmp");
         }
         case LILC_TOK_SUB: {
-            return LLVMBuildSub(builder, lhs, rhs, "subtmp");
+            return LLVMBuildFSub(builder, lhs, rhs, "subtmp");
         }
         case LILC_TOK_MUL: {
-            return LLVMBuildMul(builder, lhs, rhs, "multmp");
+            return LLVMBuildFMul(builder, lhs, rhs, "multmp");
         }
     }
     return NULL;
@@ -200,16 +200,14 @@ codegen_proto(struct lilc_proto_node_t *node, LLVMModuleRef module,
         // TODO verify parameter types too, once more are supported
     }
     // Otherwise create a new function definition.
-    // TODO Change if you want to support functions that operate on more than
-    // just int64s
     else {
         // Create argument list.
         LLVMTypeRef *params = malloc(sizeof(LLVMTypeRef) * node->arg_count);
         for (int i = 0; i < node->arg_count; i++) {
-            params[i] = LLVMInt64Type();  // TODO Look up types on the proto node?
+            params[i] = LLVMDoubleType();  // TODO Look up types on the proto node?
         }
         // Create function type.
-        LLVMTypeRef funcType = LLVMFunctionType(LLVMInt64Type(), params, node->arg_count, 0);
+        LLVMTypeRef funcType = LLVMFunctionType(LLVMDoubleType(), params, node->arg_count, 0);
         // Create function.
         func = LLVMAddFunction(module, node->name, funcType);
         LLVMSetLinkage(func, LLVMExternalLinkage);
@@ -258,8 +256,8 @@ static LLVMValueRef
 do_codegen(struct lilc_node_t *node, LLVMModuleRef module,
            LLVMBuilderRef builder, cfuhash_table_t *named_vals) {
     switch(node->type) {
-        case LILC_NODE_INT: {
-            return codegen_int((struct lilc_int_node_t *)node);
+        case LILC_NODE_DBL: {
+            return codegen_dbl((struct lilc_dbl_node_t *)node);
         }
         case LILC_NODE_OP_BIN: {
             return codegen_binop((struct lilc_bin_op_node_t *)node, module, builder, named_vals);

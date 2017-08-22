@@ -69,9 +69,10 @@ test_codegen(char *src_path, char *want_path) {
     struct lilc_node_t *node;
     node = program(&parse);
 
-    int got = lilc_eval(node);
-    int int_want = strtol(want, NULL, 10);
-    assert(got == int_want);
+    double got = lilc_eval(node);
+    double d_want = strtod(want, NULL);
+    // fprintf(stderr, "Eval got: %f\n", got);
+    assert(got == d_want);
 
     free(src);
     free(want);

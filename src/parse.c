@@ -24,9 +24,9 @@ static struct lilc_node_t *expression(struct parser *p, int rbp);
  * TODO: Implement error checking, otherwise it'll SEGFAULT on bad input
  */
 
-// int
-static struct lilc_node_t *int_prefix(struct parser *p, struct token t) {
-    return (struct lilc_node_t *)lilc_int_node_new(t.val.as_int);
+// double
+static struct lilc_node_t *dbl_prefix(struct parser *p, struct token t) {
+    return (struct lilc_node_t *)lilc_dbl_node_new(t.val.as_dbl);
 }
 
 // "("
@@ -68,8 +68,8 @@ struct vtable vtables[] = {
         .lbp = 2,
         .as_infix = bin_op_infix,
     },
-    [LILC_TOK_INT] = {
-        .as_prefix = int_prefix,
+    [LILC_TOK_DBL] = {
+        .as_prefix = dbl_prefix,
     },
 };
 

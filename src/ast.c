@@ -14,10 +14,10 @@ char *lilc_node_str[] = {
 };
 
 
-struct lilc_int_node_t *
-lilc_int_node_new(int val) {
-    struct lilc_int_node_t *node = malloc(sizeof(struct lilc_int_node_t));
-    node->base.type = LILC_NODE_INT;
+struct lilc_dbl_node_t *
+lilc_dbl_node_new(double val) {
+    struct lilc_dbl_node_t *node = malloc(sizeof(struct lilc_dbl_node_t));
+    node->base.type = LILC_NODE_DBL;
     node->val = val;
     return node;
 };
@@ -64,9 +64,9 @@ int
 ast_readf(char *buf, int i, struct lilc_node_t *node) {
     i += sprintf(buf + i, "(");
     switch (node->type) {
-        case LILC_NODE_INT:
-            i += sprintf(buf + i, "int ");
-            i += sprintf(buf + i, "%d", ((struct lilc_int_node_t *)node)->val);
+        case LILC_NODE_DBL:
+            i += sprintf(buf + i, "dbl ");
+            i += sprintf(buf + i, "%.1f", ((struct lilc_dbl_node_t *)node)->val);
             break;
         case LILC_NODE_OP_BIN:
             i += sprintf(buf + i, "%s ", lilc_token_str[((struct lilc_bin_op_node_t *)node)->op]);

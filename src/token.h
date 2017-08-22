@@ -9,13 +9,13 @@ enum tok_type {
     LILC_TOK_ADD,
     LILC_TOK_SUB,
     LILC_TOK_MUL,
-    LILC_TOK_INT,
+    LILC_TOK_DBL,
 };
 
 struct token {
     enum tok_type cls;
     union {
-      int as_int;
+      double as_dbl;
       char as_str;
     } val;
 };

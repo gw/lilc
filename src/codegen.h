@@ -6,7 +6,7 @@
 void
 lilc_codegen(struct lilc_node_t *node, char *path, void *result);
 
-int
+double
 lilc_eval(struct lilc_node_t *node);
 
 void

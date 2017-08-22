@@ -9,9 +9,9 @@ set_tok_type(struct lexer *lex, enum tok_type t) {
     return lex->tok.cls = t;
 }
 
-static int
-set_tok_val_int(struct lexer *lex, int val) {
-    return lex->tok.val.as_int = val;
+static double
+set_tok_val_dbl(struct lexer *lex, double val) {
+    return lex->tok.val.as_dbl = val;
 }
 
 static void
@@ -20,16 +20,17 @@ lexer_putback(struct lexer *lex) {
 }
 
 // Tokenize an entire number.
+// Only floats supported for now
 static enum tok_type
 consume_number(struct lexer *lex, char c) {
-    int n = 0;
+    double n = 0;
     do {
         n = n * 10 + (c - '0');
     } while (isdigit(c = lex->source[lex->offset++]));
     lexer_putback(lex);
 
-    set_tok_val_int(lex, n);
-    return set_tok_type(lex, LILC_TOK_INT);
+    set_tok_val_dbl(lex, n);
+    return set_tok_type(lex, LILC_TOK_DBL);
 }
 
 // Scan the next token in the source input.
@@ -81,10 +82,10 @@ tok_strm_readf(char *buf, struct lexer *lex) {
     while (lexer_scan(lex)) {
         i += sprintf(buf + i, "<");
         switch (lex->tok.cls) {
-            case LILC_TOK_INT:
+            case LILC_TOK_DBL:
                 // Token has a meaningful value
                 i += sprintf(buf + i, "%s,", lilc_token_str[lex->tok.cls]);
-                i += sprintf(buf + i, "%d", lex->tok.val.as_int);
+                i += sprintf(buf + i, "%.1f", lex->tok.val.as_dbl);
                 break;
             default:
                 i += sprintf(buf + i, "%s", lilc_token_str[lex->tok.cls]);
