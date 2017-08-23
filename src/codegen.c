@@ -191,7 +191,7 @@ codegen_proto(struct lilc_proto_node_t *node, LLVMModuleRef module,
     LLVMValueRef func = LLVMGetNamedFunction(module, node->name);
     if(func != NULL) {
         // Verify parameter count matches.
-        if(LLVMCountParams(func) != node->arg_count) {
+        if(LLVMCountParams(func) != node->param_count) {
             fprintf(stderr, "Existing function exists with different parameter count\n");
             return NULL;
         }
@@ -204,23 +204,23 @@ codegen_proto(struct lilc_proto_node_t *node, LLVMModuleRef module,
     }
     // Otherwise create a new function definition.
     else {
-        // Create argument list.
-        LLVMTypeRef *params = malloc(sizeof(LLVMTypeRef) * node->arg_count);
-        for (int i = 0; i < node->arg_count; i++) {
+        // Create parameter list.
+        LLVMTypeRef *params = malloc(sizeof(LLVMTypeRef) * node->param_count);
+        for (int i = 0; i < node->param_count; i++) {
             params[i] = LLVMDoubleType();  // TODO Look up types on the proto node?
         }
         // Create function type.
-        LLVMTypeRef funcType = LLVMFunctionType(LLVMDoubleType(), params, node->arg_count, 0);
+        LLVMTypeRef funcType = LLVMFunctionType(LLVMDoubleType(), params, node->param_count, 0);
         // Create function.
         func = LLVMAddFunction(module, node->name, funcType);
         LLVMSetLinkage(func, LLVMExternalLinkage);
     }
-    // Assign arguments to named values lookup.
-    for (int i = 0; i < node->arg_count; i++) {
+    // Assign parameters to named values lookup.
+    for (int i = 0; i < node->param_count; i++) {
         // Not necessay, but results in more readable IR
         LLVMValueRef param = LLVMGetParam(func, i);
-        LLVMSetValueName(param, node->args[i]);
-        cfuhash_put(named_vals, node->args[i], param);
+        LLVMSetValueName(param, node->params[i]);
+        cfuhash_put(named_vals, node->params[i], param);
     }
     return func;
 }

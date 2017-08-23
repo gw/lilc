@@ -38,8 +38,8 @@ struct lilc_bin_op_node_t {
 struct lilc_proto_node_t {
     struct lilc_node_t base;
     char *name;
-    char **args;
-    unsigned int arg_count;
+    char **params;
+    unsigned int param_count;
 };
 
 // Function declaration node
@@ -59,7 +59,7 @@ struct lilc_bin_op_node_t *
 lilc_bin_op_node_new(struct lilc_node_t *left, struct lilc_node_t *right, enum tok_type op);
 
 struct lilc_proto_node_t *
-lilc_proto_node_new(char *name, char **args, unsigned int arg_count);
+lilc_proto_node_new(char *name, char **params, unsigned int param_count);
 
 struct lilc_funcdef_node_t *
 lilc_funcdef_node_new(struct lilc_proto_node_t *proto, struct lilc_node_t *body);

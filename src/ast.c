@@ -34,16 +34,16 @@ lilc_bin_op_node_new(struct lilc_node_t *left, struct lilc_node_t *right, enum t
 
 // TODO add a types array arg
 struct lilc_proto_node_t *
-lilc_proto_node_new(char *name, char **args, unsigned int arg_count) {
+lilc_proto_node_new(char *name, char **params, unsigned int param_count) {
     struct lilc_proto_node_t *node = malloc(sizeof(struct lilc_proto_node_t));
     node->base.type = LILC_NODE_PROTO;
     node->name = strdup(name);
-    node->arg_count = arg_count;
+    node->param_count = param_count;
 
-    // Copy arguments.
-    node->args = malloc(sizeof(char*) * arg_count);
-    for(int i=0; i<arg_count; i++) {
-        node->args[i] = strdup(args[i]);
+    // Copy params.
+    node->params = malloc(sizeof(char*) * param_count);
+    for(int i=0; i<param_count; i++) {
+        node->params[i] = strdup(params[i]);
     }
 
     return node;
@@ -81,7 +81,7 @@ ast_readf(char *buf, int i, struct lilc_node_t *node) {
         case LILC_NODE_PROTO:
             i += sprintf(buf + i, "%s: ", lilc_node_str[((struct lilc_proto_node_t *)node)->base.type]);
             i += sprintf(buf + i, "%s ", ((struct lilc_proto_node_t *)node)->name);
-            i += sprintf(buf + i, "%d", ((struct lilc_proto_node_t *)node)->arg_count);
+            i += sprintf(buf + i, "%d", ((struct lilc_proto_node_t *)node)->param_count);
             break;
         default:
             i += sprintf(buf + i, "Unknown: %d", node->type);
