@@ -1,6 +1,8 @@
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h>
+#include <string.h>
+
 #include "lex.h"
 #include "token.h"
 
@@ -14,9 +16,40 @@ set_tok_val_dbl(struct lexer *lex, double val) {
     return lex->tok.val.as_dbl = val;
 }
 
+static char *
+set_tok_val_str(struct lexer *lex, char *val) {
+    return lex->tok.val.as_str = strdup(val);
+}
+
+
 static void
 lexer_putback(struct lexer *lex) {
     lex->offset--;
+}
+
+#define MAX_IDENT 64
+// Tokenize an entire identifier.
+// Identifiers must be <= 64 char long and can contain
+// alphas, nums, and '_', but must start with an alpha.
+static enum tok_type
+consume_id(struct lexer *lex, char c) {
+    char buf[MAX_IDENT];
+    int i = 0;
+    do {
+        buf[i++] = c;
+    } while (
+        (isalpha(c = lex->source[lex->offset++]) || isdigit(c) || c == '_') &&
+        i < MAX_IDENT - 1
+    );
+    buf[i] = '\0';
+    lexer_putback(lex);
+
+    set_tok_val_str(lex, buf);
+    if (strcmp(buf, "def") == 0) {
+        return set_tok_type(lex, LILC_TOK_DEF);
+    } else {
+        return set_tok_type(lex, LILC_TOK_ID);
+    }
 }
 
 // Tokenize an entire number.
@@ -53,6 +86,7 @@ lexer_scan(struct lexer *lex) {
             case '/': return set_tok_type(lex, LILC_TOK_DIV);
             case '\0': return set_tok_type(lex, LILC_TOK_EOS);
             default:
+                if (isalpha(c)) return consume_id(lex, c);
                 if (isdigit(c)) return consume_number(lex, c);
                 fprintf(stderr, "Unrecognized input char: '%c'\n", c);
                 exit(1);
@@ -84,9 +118,12 @@ tok_strm_readf(char *buf, struct lexer *lex) {
         i += sprintf(buf + i, "<");
         switch (lex->tok.cls) {
             case LILC_TOK_DBL:
-                // Token has a meaningful value
                 i += sprintf(buf + i, "%s,", lilc_token_str[lex->tok.cls]);
                 i += sprintf(buf + i, "%.1f", lex->tok.val.as_dbl);
+                break;
+            case LILC_TOK_ID:
+                i += sprintf(buf + i, "%s,", lilc_token_str[lex->tok.cls]);
+                i += sprintf(buf + i, "%s", lex->tok.val.as_str);
                 break;
             default:
                 i += sprintf(buf + i, "%s", lilc_token_str[lex->tok.cls]);

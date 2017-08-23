@@ -5,6 +5,8 @@
  */
 char *lilc_token_str[] = {
   [LILC_TOK_EOS] = "end-of-source",
+  [LILC_TOK_ID] = "id",
+  [LILC_TOK_DEF] = "def",
   [LILC_TOK_SEMI] = ";",
   [LILC_TOK_LPAREN] = "(",
   [LILC_TOK_RPAREN] = ")",

@@ -86,6 +86,7 @@ main() {
     // Lexer
     test_lexer("src_examples/arith_basic.lilc", "lexer/arith_basic.tok");
     test_lexer("src_examples/arith_parens.lilc", "lexer/arith_parens.tok");
+    test_lexer("src_examples/ident.lilc", "lexer/ident.tok");
 
     // Parser
     test_parser("src_examples/arith_basic.lilc", "parser/arith_basic.ast");

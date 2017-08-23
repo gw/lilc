@@ -3,9 +3,13 @@
 
 enum tok_type {
     LILC_TOK_EOS,
+    LILC_TOK_ID,
+    LILC_TOK_DEF,
     LILC_TOK_SEMI,
     LILC_TOK_LPAREN,
     LILC_TOK_RPAREN,
+    LILC_TOK_LCURL,
+    LILC_TOK_RCURL,
     LILC_TOK_DBL,
     LILC_TOK_ADD,
     LILC_TOK_SUB,
@@ -17,7 +21,7 @@ struct token {
     enum tok_type cls;
     union {
       double as_dbl;
-      char as_str;
+      char *as_str;
     } val;
 };
 
