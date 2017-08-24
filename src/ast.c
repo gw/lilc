@@ -22,6 +22,14 @@ lilc_dbl_node_new(double val) {
     return node;
 };
 
+struct lilc_var_node_t *
+lilc_var_node_new(char *name) {
+    struct lilc_var_node_t *node = malloc(sizeof(struct lilc_var_node_t));
+    node->base.type = LILC_NODE_VAR;
+    node->name = name;
+    return node;
+}
+
 struct lilc_bin_op_node_t *
 lilc_bin_op_node_new(struct lilc_node_t *left, struct lilc_node_t *right, enum tok_type op) {
     struct lilc_bin_op_node_t *node = malloc(sizeof(struct lilc_bin_op_node_t));
@@ -42,7 +50,7 @@ lilc_proto_node_new(char *name, char **params, unsigned int param_count) {
 
     // Copy params.
     node->params = malloc(sizeof(char*) * param_count);
-    for(int i=0; i<param_count; i++) {
+    for(int i = 0; i < param_count; i++) {
         node->params[i] = strdup(params[i]);
     }
 
@@ -68,6 +76,10 @@ ast_readf(char *buf, int i, struct lilc_node_t *node) {
             i += sprintf(buf + i, "dbl ");
             i += sprintf(buf + i, "%.1f", ((struct lilc_dbl_node_t *)node)->val);
             break;
+        case LILC_NODE_VAR:
+            i += sprintf(buf + i, "var ");
+            i += sprintf(buf + i, "%s", ((struct lilc_var_node_t *)node)->name);
+            break;
         case LILC_NODE_OP_BIN:
             i += sprintf(buf + i, "%s ", lilc_token_str[((struct lilc_bin_op_node_t *)node)->op]);
             i = ast_readf(buf, i, ((struct lilc_bin_op_node_t *)node)->left);
@@ -78,11 +90,16 @@ ast_readf(char *buf, int i, struct lilc_node_t *node) {
             i = ast_readf(buf, i, ((struct lilc_funcdef_node_t *)node)->proto);
             i = ast_readf(buf, i, ((struct lilc_funcdef_node_t *)node)->body);
             break;
-        case LILC_NODE_PROTO:
-            i += sprintf(buf + i, "%s: ", lilc_node_str[((struct lilc_proto_node_t *)node)->base.type]);
-            i += sprintf(buf + i, "%s ", ((struct lilc_proto_node_t *)node)->name);
-            i += sprintf(buf + i, "%d", ((struct lilc_proto_node_t *)node)->param_count);
+        case LILC_NODE_PROTO: {
+            struct lilc_proto_node_t *n = (struct lilc_proto_node_t *)node;
+            i += sprintf(buf + i, "%s [", n->name);
+            for (int j = 0; j < n->param_count; j++) {
+                i += sprintf(buf + i, "%s,", n->params[j]);
+            }
+            i--;  // Delete trailing comma
+            i += sprintf(buf + i, "]");
             break;
+        }
         default:
             i += sprintf(buf + i, "Unknown: %d", node->type);
     }

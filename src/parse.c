@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "ast.h"
 #include "lex.h"
@@ -30,7 +31,15 @@ dbl_prefix(struct parser *p, struct token t) {
     return (struct lilc_node_t *)lilc_dbl_node_new(t.val.as_dbl);
 }
 
-// "("
+// identifier
+static struct lilc_node_t *
+id_prefix(struct parser *p, struct token t) {
+    // Need to check lookahead for "(" and potentially handle function calls here?
+    return (struct lilc_node_t *)lilc_var_node_new(t.val.as_str);
+}
+
+// Parenthesized expressions
+// "(" usage in param lists and function calls is handled separately
 static struct lilc_node_t *
 lparen_prefix(struct parser *p, struct token t) {
     struct lilc_node_t *result = expression(p, 0);
@@ -47,6 +56,49 @@ bin_op_infix(struct parser *p, struct token t, struct lilc_node_t *left) {
     return (struct lilc_node_t *)lilc_bin_op_node_new(left, expression(p, vtables[t.cls].lbp), t.cls);
 }
 
+// "def"
+static struct lilc_node_t *
+funcdef_prefix(struct parser *p, struct token t) {
+    // Consume function name
+    if (!lexer_advance(p->lex, LILC_TOK_ID)) {
+        fprintf(stderr, "Expected id, got %s\n", p->lex->tok.cls);
+        exit(1);
+    }
+    // TODO: Confusing--make a lex_curr_type method or something
+    // that asserts but doesn't advance lexer
+    char *name = p->lex->tok.val.as_str;
+    // Consume "("
+    if (!lexer_advance(p->lex, LILC_TOK_LPAREN)) {
+        fprintf(stderr, "Expected '(', got %s\n", p->lex->tok.cls);
+        exit(1);
+    }
+    // Parse param list
+    char *params[16];
+    unsigned int param_count = 0;
+    do {
+        params[param_count++] = strdup(p->lex->tok.val.as_str);
+        lexer_scan(p->lex);
+    } while (lexer_advance(p->lex, LILC_TOK_COMMA) || lexer_advance(p->lex, LILC_TOK_ID));
+    // Consume ")"
+    if (!lexer_advance(p->lex, LILC_TOK_RPAREN)) {
+        fprintf(stderr, "Expected ')', got %s\n", p->lex->tok.cls);
+        exit(1);
+    }
+    // Consume "{"
+    if (!lexer_advance(p->lex, LILC_TOK_LCURL)) {
+        fprintf(stderr, "Expected '{', got %s\n", p->lex->tok.cls);
+        exit(1);
+    }
+    struct lilc_node_t *body = expression(p, 0);
+    // Consume "}"
+    if (!lexer_advance(p->lex, LILC_TOK_RCURL)) {
+        fprintf(stderr, "Expected '}', got %s\n", p->lex->tok.cls);
+        exit(1);
+    }
+    struct lilc_proto_node_t *proto = lilc_proto_node_new(name, params, param_count);
+    return (struct lilc_node_t *)lilc_funcdef_node_new(proto, body);
+}
+
 // Lookup array for token vtable implementations
 struct vtable vtables[] = {
     [LILC_TOK_EOS] = {
@@ -55,7 +107,11 @@ struct vtable vtables[] = {
     [LILC_TOK_SEMI] = {
         .lbp = 0,
     },
-    [LILC_TOK_LPAREN] = {
+    [LILC_TOK_DEF] = {
+        .lbp = 0,
+        .as_prefix = funcdef_prefix,
+    },
+    [LILC_TOK_LPAREN] = {  // TODO: might have to change this to implement function calls
         .lbp = 0,
         .as_prefix = lparen_prefix,
     },
@@ -77,6 +133,9 @@ struct vtable vtables[] = {
     },
     [LILC_TOK_DBL] = {
         .as_prefix = dbl_prefix,
+    },
+    [LILC_TOK_ID] = {
+        .as_prefix = id_prefix,
     },
 };
 
@@ -109,9 +168,8 @@ stmt(struct parser *p) {
 struct lilc_node_t *
 program(struct parser *p) {
     struct lilc_node_t *node;
-    while (lexer_scan(p->lex) > 0) {  // Call program parser function
-        node = stmt(p);
-    }
+    lexer_scan(p->lex);
+    node = stmt(p);
     // TODO check if EOS or error and respond appropriately
     return node;
 }

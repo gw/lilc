@@ -16,6 +16,7 @@ set_tok_val_dbl(struct lexer *lex, double val) {
     return lex->tok.val.as_dbl = val;
 }
 
+// `val` must be a null-terminated string
 static char *
 set_tok_val_str(struct lexer *lex, char *val) {
     return lex->tok.val.as_str = strdup(val);
@@ -77,9 +78,12 @@ lexer_scan(struct lexer *lex) {
             case ' ':
             case '\n':  // TODO incr line number for debugging
             case '\t': continue;
+            case ',': return set_tok_type(lex, LILC_TOK_COMMA);
             case ';': return set_tok_type(lex, LILC_TOK_SEMI);
             case '(': return set_tok_type(lex, LILC_TOK_LPAREN);
             case ')': return set_tok_type(lex, LILC_TOK_RPAREN);
+            case '{': return set_tok_type(lex, LILC_TOK_LCURL);
+            case '}': return set_tok_type(lex, LILC_TOK_RCURL);
             case '+': return set_tok_type(lex, LILC_TOK_ADD);
             case '-': return set_tok_type(lex, LILC_TOK_SUB);
             case '*': return set_tok_type(lex, LILC_TOK_MUL);

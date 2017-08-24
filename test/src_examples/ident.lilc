@@ -1,1 +1,1 @@
-def foo (arg1) {arg1 + arg2}
+def foo (arg1, arg2) {arg1 + arg2}

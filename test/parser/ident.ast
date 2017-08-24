@@ -1,0 +1,1 @@
+(funcdef (foo [arg1,arg2])(+ (var arg1)(var arg2)))

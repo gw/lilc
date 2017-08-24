@@ -5,6 +5,7 @@
 
 enum node_type {
     LILC_NODE_DBL,
+    LILC_NODE_VAR,
     LILC_NODE_EXPR,
     LILC_NODE_OP_BIN,
     LILC_NODE_PROTO,
@@ -24,6 +25,12 @@ struct lilc_node_t {
 struct lilc_dbl_node_t {
     struct lilc_node_t base;
     double val;
+};
+
+// Variable expression node
+struct lilc_var_node_t {
+    struct lilc_node_t base;
+    char *name;
 };
 
 // Binary operation node
@@ -54,6 +61,9 @@ struct lilc_funcdef_node_t {
  */
 struct lilc_dbl_node_t *
 lilc_dbl_node_new(double val);
+
+struct lilc_var_node_t *
+lilc_var_node_new(char *name);
 
 struct lilc_bin_op_node_t *
 lilc_bin_op_node_new(struct lilc_node_t *left, struct lilc_node_t *right, enum tok_type op);

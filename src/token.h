@@ -6,6 +6,7 @@ enum tok_type {
     LILC_TOK_ID,
     LILC_TOK_DEF,
     LILC_TOK_SEMI,
+    LILC_TOK_COMMA,
     LILC_TOK_LPAREN,
     LILC_TOK_RPAREN,
     LILC_TOK_LCURL,
