@@ -43,10 +43,7 @@ id_prefix(struct parser *p, struct token t) {
 static struct lilc_node_t *
 lparen_prefix(struct parser *p, struct token t) {
     struct lilc_node_t *result = expression(p, 0);
-    if (!lexer_advance(p->lex, LILC_TOK_RPAREN)) {
-        fprintf(stderr, "Expected ')', got: %s", lilc_token_str[p->lex->tok.cls]);
-        exit(1);
-    }
+    lexer_consumef(p->lex, LILC_TOK_RPAREN);
     return result;
 }
 
@@ -59,42 +56,27 @@ bin_op_infix(struct parser *p, struct token t, struct lilc_node_t *left) {
 // "def"
 static struct lilc_node_t *
 funcdef_prefix(struct parser *p, struct token t) {
-    // Consume function name
-    if (!lexer_advance(p->lex, LILC_TOK_ID)) {
-        fprintf(stderr, "Expected id, got %s\n", p->lex->tok.cls);
-        exit(1);
-    }
+    lexer_consumef(p->lex, LILC_TOK_ID);  // Function name
     // TODO: Confusing--make a lex_curr_type method or something
     // that asserts but doesn't advance lexer
     char *name = p->lex->tok.val.as_str;
-    // Consume "("
-    if (!lexer_advance(p->lex, LILC_TOK_LPAREN)) {
-        fprintf(stderr, "Expected '(', got %s\n", p->lex->tok.cls);
-        exit(1);
-    }
-    // Parse param list
+
+    lexer_consumef(p->lex, LILC_TOK_LPAREN);
+
     char *params[16];
     unsigned int param_count = 0;
     do {
         params[param_count++] = strdup(p->lex->tok.val.as_str);
         lexer_scan(p->lex);
-    } while (lexer_advance(p->lex, LILC_TOK_COMMA) || lexer_advance(p->lex, LILC_TOK_ID));
-    // Consume ")"
-    if (!lexer_advance(p->lex, LILC_TOK_RPAREN)) {
-        fprintf(stderr, "Expected ')', got %s\n", p->lex->tok.cls);
-        exit(1);
-    }
-    // Consume "{"
-    if (!lexer_advance(p->lex, LILC_TOK_LCURL)) {
-        fprintf(stderr, "Expected '{', got %s\n", p->lex->tok.cls);
-        exit(1);
-    }
+    } while (lexer_consume(p->lex, LILC_TOK_COMMA) || lexer_consume(p->lex, LILC_TOK_ID));
+
+    lexer_consumef(p->lex, LILC_TOK_RPAREN);
+    lexer_consumef(p->lex, LILC_TOK_LCURL);
+
     struct lilc_node_t *body = expression(p, 0);
-    // Consume "}"
-    if (!lexer_advance(p->lex, LILC_TOK_RCURL)) {
-        fprintf(stderr, "Expected '}', got %s\n", p->lex->tok.cls);
-        exit(1);
-    }
+
+    lexer_consumef(p->lex, LILC_TOK_RCURL);
+
     struct lilc_proto_node_t *proto = lilc_proto_node_new(name, params, param_count);
     return (struct lilc_node_t *)lilc_funcdef_node_new(proto, body);
 }

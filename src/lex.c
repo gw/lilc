@@ -99,16 +99,33 @@ lexer_scan(struct lexer *lex) {
 }
 
 // Assert current token type.
-// If assertion passes, returns 1 and advances lexer
-// Otherwise returns 0 and does not adavnce lexer
+// If assertion passes, returns 1 and advances lexer,
+// otherwise returns 0 and does not advance lexer.
 int
-lexer_advance(struct lexer *lex, enum tok_type t) {
-    if (lex->tok.cls == t) {
+lexer_consume(struct lexer *lex, enum tok_type want) {
+    enum tok_type curr = lex->tok.cls;
+    if (curr == want) {
         lexer_scan(lex);
         return 1;
     } else {
         return 0;
     }
+}
+
+// Assert current token type, failing hard.
+// If assertion passes, returns 1 and advances lexer,
+// otherwise prints an error message and dies.
+int
+lexer_consumef(struct lexer *lex, enum tok_type want) {
+    if (!lexer_consume(lex, want)) {
+        fprintf(
+            stderr,
+            "Expected token '%s', got '%s'\n",
+            lilc_token_str[want], lilc_token_str[lex->tok.cls]
+        );
+        exit(1);
+    }
+    return 1;
 }
 
 // Read a formatted version of the remaining token stream into a buffer,

@@ -12,7 +12,8 @@ struct lexer {
 };
 
 void lexer_init(struct lexer *lex, char *source);
-int lexer_advance(struct lexer *lex, enum tok_type t);
+int lexer_consume(struct lexer *lex, enum tok_type want);
+int lexer_consumef(struct lexer *lex, enum tok_type want);
 enum tok_type lexer_scan(struct lexer *lex);
 int tok_strm_readf(char *buf, struct lexer *lex);
 
