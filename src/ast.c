@@ -45,13 +45,13 @@ struct lilc_proto_node_t *
 lilc_proto_node_new(char *name, char **params, unsigned int param_count) {
     struct lilc_proto_node_t *node = malloc(sizeof(struct lilc_proto_node_t));
     node->base.type = LILC_NODE_PROTO;
-    node->name = strdup(name);
+    node->name = name;
     node->param_count = param_count;
 
-    // Copy params.
+    // Copy params pointer array to heap
     node->params = malloc(sizeof(char*) * param_count);
     for(int i = 0; i < param_count; i++) {
-        node->params[i] = strdup(params[i]);
+        node->params[i] = params[i];
     }
 
     return node;

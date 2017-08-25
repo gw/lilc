@@ -64,7 +64,7 @@ funcdef_prefix(struct parser *p, struct token t) {
     char *params[16];
     unsigned int param_count = 0;
     do {
-        params[param_count++] = strdup(p->lex->tok.val.as_str);
+        params[param_count++] = p->lex->tok.val.as_str;
         lexer_scan(p->lex);
     } while (lexer_consume(p->lex, LILC_TOK_COMMA) || lexer_consume(p->lex, LILC_TOK_ID));
 

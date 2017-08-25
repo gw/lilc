@@ -11,18 +11,6 @@ set_tok_type(struct lexer *lex, enum tok_type t) {
     return lex->tok.cls = t;
 }
 
-static double
-set_tok_val_dbl(struct lexer *lex, double val) {
-    return lex->tok.val.as_dbl = val;
-}
-
-// `val` must be a null-terminated string
-static char *
-set_tok_val_str(struct lexer *lex, char *val) {
-    return lex->tok.val.as_str = strdup(val);
-}
-
-
 static void
 lexer_putback(struct lexer *lex) {
     lex->offset--;
@@ -36,6 +24,7 @@ static enum tok_type
 consume_id(struct lexer *lex, char c) {
     char buf[MAX_IDENT];
     int i = 0;
+
     do {
         buf[i++] = c;
     } while (
@@ -45,10 +34,11 @@ consume_id(struct lexer *lex, char c) {
     buf[i] = '\0';
     lexer_putback(lex);
 
-    set_tok_val_str(lex, buf);
     if (strcmp(buf, "def") == 0) {
         return set_tok_type(lex, LILC_TOK_DEF);
     } else {
+        // Non-keyword identifier
+        lex->tok.val.as_str = strdup(buf);
         return set_tok_type(lex, LILC_TOK_ID);
     }
 }
@@ -63,7 +53,7 @@ consume_number(struct lexer *lex, char c) {
     } while (isdigit(c = lex->source[lex->offset++]));
     lexer_putback(lex);
 
-    set_tok_val_dbl(lex, n);
+    lex->tok.val.as_dbl = n;
     return set_tok_type(lex, LILC_TOK_DBL);
 }
 
