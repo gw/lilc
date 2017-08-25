@@ -42,9 +42,10 @@ lilc_eval(struct lilc_node_t *node) {
         exit(1);
     }
 
-    // Wrap provided node in a 'main' function, if necessary.
-    // TODO: maybe require user to provide a main function,
-    // once function calls are implemented in the frontend
+    // Wrap provided node in a top-level 'main' function, if the user hasn't
+    // already...
+    // TODO: maybe require user to provide a main function, once
+    // function calls are implemented in the frontend
     if (node->type != LILC_NODE_FUNCDEF) {
         struct lilc_proto_node_t *proto = lilc_proto_node_new("main", NULL, 0);
         node = (struct lilc_node_t *)lilc_funcdef_node_new(proto, node);
