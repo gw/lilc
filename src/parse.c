@@ -34,17 +34,38 @@ dbl_prefix(struct parser *p, struct token t) {
 // identifier
 static struct lilc_node_t *
 id_prefix(struct parser *p, struct token t) {
-    // Need to check lookahead for "(" and potentially handle function calls here?
     return (struct lilc_node_t *)lilc_var_node_new(t.val.as_str);
 }
 
-// Parenthesized expressions
-// "(" usage in param lists and function calls is handled separately
+// Parenthesized arithmetic expressions
 static struct lilc_node_t *
 lparen_prefix(struct parser *p, struct token t) {
-    struct lilc_node_t *result = expression(p, 0);
+    // 0 rbp here b/c we obviously want to
+    // continue parsing the contents of the
+    // parenthesized expression. Parenthesized
+    // expressions are always subexpressions of
+    // any containing expression they're part of.
+    struct lilc_node_t *node = expression(p, 0);
     lexer_consumef(p->lex, LILC_TOK_RPAREN);
-    return result;
+    return node;
+}
+
+#define MAX_FUNC_PARAMS 16
+
+// Function calls
+static struct lilc_node_t *
+lparen_infix(struct parser *p, struct token t, struct lilc_node_t *left) {
+    struct lilc_node_t *args[MAX_FUNC_PARAMS];
+    unsigned int arg_count = 0;
+
+    do {
+        args[arg_count++] = expression(p, 0);
+    } while (lexer_consume(p->lex, LILC_TOK_COMMA));
+
+    lexer_consumef(p->lex, LILC_TOK_RPAREN);
+
+    char *name = ((struct lilc_var_node_t *)left)->name;
+    return (struct lilc_node_t *)lilc_funccall_node_new(name, args, arg_count);
 }
 
 // "+", "-", "*", "/"
@@ -61,12 +82,17 @@ funcdef_prefix(struct parser *p, struct token t) {
 
     lexer_consumef(p->lex, LILC_TOK_LPAREN);
 
-    char *params[16];
+    char *params[MAX_FUNC_PARAMS];
     unsigned int param_count = 0;
     do {
         params[param_count++] = p->lex->tok.val.as_str;
         lexer_scan(p->lex);
-    } while (lexer_consume(p->lex, LILC_TOK_COMMA) || lexer_consume(p->lex, LILC_TOK_ID));
+    } while (lexer_consume(p->lex, LILC_TOK_COMMA));
+
+    if (param_count > MAX_FUNC_PARAMS) {
+        fprintf(stderr, "Too many params for function %s\n", name);
+        exit(1);
+    }
 
     lexer_consumef(p->lex, LILC_TOK_RPAREN);
     lexer_consumef(p->lex, LILC_TOK_LCURL);
@@ -91,9 +117,15 @@ struct vtable vtables[] = {
         .lbp = 0,
         .as_prefix = funcdef_prefix,
     },
-    [LILC_TOK_LPAREN] = {  // TODO: might have to change this to implement function calls
-        .lbp = 0,
+    [LILC_TOK_LPAREN] = {
+        // If this had a 0 lbp, then when parsing a function call,
+        // the identifier would get parsed as its own expression,
+        // i.e. `expression()` would return before continuing to parse
+        // the LPAREN, whereas we want the entire function call to be
+        // treated as a single expression.
+        .lbp = 10,
         .as_prefix = lparen_prefix,
+        .as_infix = lparen_infix,
     },
     [LILC_TOK_ADD] = {
         .lbp = 1,
@@ -130,7 +162,10 @@ expression(struct parser *p, int rbp) {
     lexer_scan(p->lex);
     left = vtables[t.cls].as_prefix(p, t);
 
-    while (rbp < vtables[p->lex->tok.cls].lbp) {  // "precedence climbing"!
+    // Precedence climbing! Any expression on the right side
+    // of an operator with a higher binding power is considered
+    // a subexpression, so we want to continue parsing it!
+    while (rbp < vtables[p->lex->tok.cls].lbp) {
         t = p->lex->tok;
         lexer_scan(p->lex);
         left = vtables[t.cls].as_infix(p, t, left);

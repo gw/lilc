@@ -10,6 +10,7 @@ enum node_type {
     LILC_NODE_OP_BIN,
     LILC_NODE_PROTO,
     LILC_NODE_FUNCDEF,
+    LILC_NODE_FUNCCALL,
 };
 
 /*
@@ -56,6 +57,14 @@ struct lilc_funcdef_node_t {
     struct lilc_node_t *body;
 };
 
+// Function call node
+struct lilc_funccall_node_t {
+    struct lilc_node_t base;
+    char *name;
+    struct lilc_node_t **args;
+    unsigned int arg_count;
+};
+
 /*
  *Constructors
  */
@@ -73,6 +82,9 @@ lilc_proto_node_new(char *name, char **params, unsigned int param_count);
 
 struct lilc_funcdef_node_t *
 lilc_funcdef_node_new(struct lilc_proto_node_t *proto, struct lilc_node_t *body);
+
+struct lilc_funccall_node_t *
+lilc_funccall_node_new(char *name, struct lilc_node_t **args, unsigned int arg_count);
 
 int
 ast_readf(char *buf, int i, struct lilc_node_t *node);

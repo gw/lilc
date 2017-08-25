@@ -66,6 +66,26 @@ lilc_funcdef_node_new(struct lilc_proto_node_t *proto, struct lilc_node_t *body)
     return node;
 }
 
+struct lilc_funccall_node_t *
+lilc_funccall_node_new(char *name, struct lilc_node_t **args, unsigned int arg_count) {
+    struct lilc_funccall_node_t *node = malloc(sizeof(struct lilc_funccall_node_t));
+    node->base.type = LILC_NODE_FUNCCALL;
+    node->name = name;
+
+    // Copy args pointer array to heap
+    // TODO: refactor to an AST union type, so we can easily
+    // always allocate enough space for the largest possible
+    // node here, instead of hardcoding bin_op_node here just
+    // cuz it's big
+    node->args = malloc(sizeof(struct lilc_bin_op_node_t) * arg_count);
+    for(int i = 0; i < arg_count; i++) {
+        node->args[i] = args[i];
+    }
+
+    node->arg_count = arg_count;
+    return node;
+}
+
 // Read a formatted version of an AST into a buffer, returning the number of
 // bytes written.
 int
@@ -98,6 +118,14 @@ ast_readf(char *buf, int i, struct lilc_node_t *node) {
             }
             i--;  // Delete trailing comma
             i += sprintf(buf + i, "]");
+            break;
+        }
+        case LILC_NODE_FUNCCALL: {
+            struct lilc_funccall_node_t *n = (struct lilc_funccall_node_t *)node;
+            i += sprintf(buf + i, "call %s ", n->name);
+            for (int j = 0; j < n->arg_count; j++) {
+                i = ast_readf(buf, i, n->args[j]);
+            }
             break;
         }
         default:

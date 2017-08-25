@@ -87,11 +87,13 @@ main() {
     test_lexer("src_examples/arith_basic.lilc", "lexer/arith_basic.tok");
     test_lexer("src_examples/arith_parens.lilc", "lexer/arith_parens.tok");
     test_lexer("src_examples/funcdef.lilc", "lexer/funcdef.tok");
+    test_lexer("src_examples/funccall.lilc", "lexer/funccall.tok");
 
     // Parser
     test_parser("src_examples/arith_basic.lilc", "parser/arith_basic.ast");
     test_parser("src_examples/arith_parens.lilc", "parser/arith_parens.ast");
     test_parser("src_examples/funcdef.lilc", "parser/funcdef.ast");
+    test_parser("src_examples/funccall.lilc", "parser/funccall.ast");
 
     // Codegen
     test_codegen("src_examples/arith_basic.lilc", "codegen/arith_basic.result");
