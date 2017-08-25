@@ -42,11 +42,13 @@ lilc_eval(struct lilc_node_t *node) {
         exit(1);
     }
 
-    // Wrap provided node in a 'main' function.
-    // TODO: require user to provide a main function,
-    // once function definitions are implemented in the frontend
-    struct lilc_proto_node_t *proto = lilc_proto_node_new("main", NULL, 0);
-    node = (struct lilc_node_t *)lilc_funcdef_node_new(proto, node);
+    // Wrap provided node in a 'main' function, if necessary.
+    // TODO: maybe require user to provide a main function,
+    // once function calls are implemented in the frontend
+    if (node->type != LILC_NODE_FUNCDEF) {
+        struct lilc_proto_node_t *proto = lilc_proto_node_new("main", NULL, 0);
+        node = (struct lilc_node_t *)lilc_funcdef_node_new(proto, node);
+    }
 
     // Walk AST and generate code
     // named_vals keeps track of which values are defined in the current
@@ -87,7 +89,7 @@ lilc_emit(struct lilc_node_t *node, char *path) {
     LLVMInitializeAllAsmParsers();
     LLVMInitializeAllAsmPrinters();
 
-    // Wrap provided node in a 'main' function.
+    // Wrap provided node in a top-level 'main' function, if user hasn't.
     // TODO: require user to provide a main function,
     // once function definitions are implemented in the frontend
     struct lilc_proto_node_t *proto = lilc_proto_node_new("main", NULL, 0);
@@ -152,6 +154,12 @@ lilc_emit(struct lilc_node_t *node, char *path) {
 static LLVMValueRef
 codegen_dbl(struct lilc_dbl_node_t *node) {
     return LLVMConstReal(LLVMDoubleType(), node->val);
+}
+
+static LLVMValueRef
+codegen_var(struct lilc_var_node_t *node, cfuhash_table_t *named_vals) {
+    LLVMValueRef val = cfuhash_get(named_vals, node->name);
+    return val;
 }
 
 static LLVMValueRef
@@ -261,6 +269,9 @@ do_codegen(struct lilc_node_t *node, LLVMModuleRef module,
     switch(node->type) {
         case LILC_NODE_DBL: {
             return codegen_dbl((struct lilc_dbl_node_t *)node);
+        }
+        case LILC_NODE_VAR: {
+            return codegen_var((struct lilc_var_node_t *)node, named_vals);
         }
         case LILC_NODE_OP_BIN: {
             return codegen_binop((struct lilc_bin_op_node_t *)node, module, builder, named_vals);

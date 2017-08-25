@@ -95,6 +95,7 @@ main() {
 
     // Codegen
     test_codegen("src_examples/arith_basic.lilc", "codegen/arith_basic.result");
+    test_codegen("src_examples/ident.lilc", "codegen/arith_basic.result");
 
     return 0;
 }

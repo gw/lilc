@@ -56,10 +56,8 @@ bin_op_infix(struct parser *p, struct token t, struct lilc_node_t *left) {
 // "def"
 static struct lilc_node_t *
 funcdef_prefix(struct parser *p, struct token t) {
-    lexer_consumef(p->lex, LILC_TOK_ID);  // Function name
-    // TODO: Confusing--make a lex_curr_type method or something
-    // that asserts but doesn't advance lexer
     char *name = p->lex->tok.val.as_str;
+    lexer_consumef(p->lex, LILC_TOK_ID);
 
     lexer_consumef(p->lex, LILC_TOK_LPAREN);
 
