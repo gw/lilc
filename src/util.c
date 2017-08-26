@@ -2,17 +2,18 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+
 #include "util.h"
 
 void
-die (char *file, int line, int err)
-{
+die (char *file, int line, int err) {
     fprintf(stderr, "%s:%d - %s\n", file, line, strerror(err));
     exit(1);
 }
 
 // Return the size of a file or -1
-size_t file_size(FILE *f) {
+size_t
+file_size(FILE *f) {
     if (fseek(f, 0, SEEK_END)) DIE();
     size_t s = ftell(f);
     rewind(f);
