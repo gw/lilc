@@ -5,19 +5,20 @@ A hand-written compiler for a small, C-like language, targeting LLVM and built f
 Just for reference, as the parser is implemented by hand. Nonterminals defined in `token.h`
 
 ```text
-program => stmt+
-stmt =>
-    expr SEMI |
-    funcdef
+program => block
+block => expr_stmt+
+expr_stmt =>
+    expr SEMI
 funcdef =>
-    DEF ID LPAREN ID{,ID} RPAREN LCURL expr RCURL
+    DEF ID LPAREN ID {COMMA ID} RPAREN LCURL expr RCURL
 call =>
     ID LPAREN expr{,expr} RPAREN
 expr =>
     expr ADD term |
     expr SUB term |
     term          |
-    call
+    call          |
+    funcdef
 term =>
     term MUL factor |
     term DIV factor |
