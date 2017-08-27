@@ -86,18 +86,16 @@ main() {
     // Lexer
     test_lexer("src_examples/arith_basic.lilc", "lexer/arith_basic.tok");
     test_lexer("src_examples/arith_parens.lilc", "lexer/arith_parens.tok");
-    test_lexer("src_examples/funcdef.lilc", "lexer/funcdef.tok");
-    test_lexer("src_examples/funccall.lilc", "lexer/funccall.tok");
+    test_lexer("src_examples/func_basic.lilc", "lexer/func_basic.tok");
 
     // Parser
     test_parser("src_examples/arith_basic.lilc", "parser/arith_basic.ast");
     test_parser("src_examples/arith_parens.lilc", "parser/arith_parens.ast");
-    test_parser("src_examples/funcdef.lilc", "parser/funcdef.ast");
-    test_parser("src_examples/funccall.lilc", "parser/funccall.ast");
+    test_parser("src_examples/func_basic.lilc", "parser/func_basic.ast");
 
     // Codegen
     test_codegen("src_examples/arith_basic.lilc", "codegen/arith_basic.result");
-    test_codegen("src_examples/funcdef.lilc", "codegen/funcdef.result");
+    test_codegen("src_examples/func_basic.lilc", "codegen/func_basic.result");
 
     return 0;
 }
