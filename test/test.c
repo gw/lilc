@@ -10,7 +10,7 @@
 #include "ast.h"
 #include "util.h"
 
-#define MAX_TOK_STR 128  // Max length of formatted token stream
+#define MAX_TOK_STR 512  // Max length of formatted token stream
 
 static void
 test_lexer(char *src_path, char *want_path) {
@@ -97,7 +97,7 @@ main() {
 
     // Codegen
     test_codegen("src_examples/arith_basic.lilc", "codegen/arith_basic.result");
-    test_codegen("src_examples/funcdef.lilc", "codegen/arith_basic.result");
+    test_codegen("src_examples/funcdef.lilc", "codegen/funcdef.result");
 
     return 0;
 }

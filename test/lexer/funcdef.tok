@@ -1,1 +1,1 @@
-<def><id,foo><(><id,arg1><,><id,arg2><)><{><id,arg1><+><id,arg2><}>
+<def><id,foo><(><id,arg1><,><id,arg2><)><{><id,arg1><+><id,arg2><}><;><def><id,main><(><)><{><id,foo><(><dbl,1.0><,><dbl,2.0><)><}><;>

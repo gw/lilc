@@ -49,15 +49,6 @@ lilc_eval(struct lilc_node_t *node) {
         exit(1);
     }
 
-    // Wrap provided node in a top-level 'main' function, if the user hasn't
-    // already...
-    // TODO: maybe require user to provide a main function, once
-    // function calls are implemented in the frontend
-    if (node->type != LILC_NODE_FUNCDEF) {
-        struct lilc_proto_node_t *proto = lilc_proto_node_new("main", NULL, 0);
-        node = (struct lilc_node_t *)lilc_funcdef_node_new(proto, node);
-    }
-
     // Walk AST and generate code
     // named_vals keeps track of which values are defined in the current
     // scope and what their LLVM representations are. Basically a symbol table.
@@ -70,8 +61,16 @@ lilc_eval(struct lilc_node_t *node) {
         exit(1);
     }
 
-    // Eval
-    LLVMGenericValueRef eval = LLVMRunFunction(engine, val, 0, NULL);
+    // Eval 'main'
+    // Once integers are implemented run it as main (LLVM fails
+    // if the main routine doesn't return integers or void
+    // LLVMGenericValueRef eval = LLVMRunFunctionAsMain(engine, val, 0, NULL, NULL);
+    LLVMValueRef main_func = LLVMGetNamedFunction(module, "main");
+    if (!main_func) {
+        fprintf(stderr, "Function 'main' not found\n");
+        exit(1);
+    }
+    LLVMGenericValueRef eval = LLVMRunFunction(engine, main_func, 0, NULL);
     double result = (double)LLVMGenericValueToFloat(LLVMDoubleType(), eval);
 
     // Print IR
@@ -294,6 +293,33 @@ codegen_funcdef(struct lilc_funcdef_node_t *node, LLVMModuleRef module,
     return func;
 }
 
+static LLVMValueRef
+codegen_funccall(struct lilc_funccall_node_t *node, LLVMModuleRef module,
+                LLVMBuilderRef builder, cfuhash_table_t *named_vals) {
+    // Retrieve function and check signature
+    LLVMValueRef func = LLVMGetNamedFunction(module, node->name);
+    if(func == NULL) {
+        // Function used before declared
+        return NULL;
+    }
+    if (LLVMCountParams(func) != node->arg_count) {
+        // Wrong number of args supplied
+        return NULL;
+    }
+
+    // Eval args
+    LLVMValueRef *args = malloc(sizeof(LLVMValueRef) * node->arg_count);
+    for (int i = 0; i < node->arg_count; i++) {
+        args[i] = do_codegen(node->args[i], module, builder, named_vals);
+        if (args[i] == NULL) {
+            free(args);
+            return NULL;
+        }
+    }
+
+    return LLVMBuildCall(builder, func, args, node->arg_count, node->name);
+}
+
 // Recursively walk an AST and generate LLVM IR
 static LLVMValueRef
 do_codegen(struct lilc_node_t *node, LLVMModuleRef module,
@@ -315,7 +341,10 @@ do_codegen(struct lilc_node_t *node, LLVMModuleRef module,
             return codegen_proto((struct lilc_proto_node_t *)node, module, named_vals);
         }
         case LILC_NODE_FUNCDEF: {
-            return codegen_funcdef((struct lilc_funcdef_node_t *)node, module, builder, named_vals);
+        return codegen_funcdef((struct lilc_funcdef_node_t *)node, module, builder, named_vals);
+        }
+        case LILC_NODE_FUNCCALL: {
+            return codegen_funccall((struct lilc_funccall_node_t *)node, module, builder, named_vals);
         }
     }
     return NULL;
