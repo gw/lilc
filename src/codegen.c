@@ -25,7 +25,13 @@ do_codegen(struct lilc_node_t *node, LLVMModuleRef module, LLVMBuilderRef builde
 double
 lilc_eval(struct lilc_node_t *node) {
     // LLVM setup
+    // Contains functions and global vars. Top-level structure
+    // to contain any generated IR.
     LLVMModuleRef module = LLVMModuleCreateWithName("lilc_eval");
+    // Akin to a cursor--used to insert IR instructions.
+    // "Methods" that take a builder instance map directly
+    // to LLVM IR instructions, documented here:
+    // https://llvm.org/docs/LangRef.html#llvm-language-reference-manual
     LLVMBuilderRef builder = LLVMCreateBuilder();
     LLVMInitializeAllTargetInfos();
     LLVMInitializeAllTargets();
@@ -227,10 +233,7 @@ codegen_proto(struct lilc_proto_node_t *node, LLVMModuleRef module,
             fprintf(stderr, "Existing function exists with a body\n");
             return NULL;
         }
-        // TODO verify parameter types too, once more are supported
-    }
-    // Otherwise create a new function definition.
-    else {
+    } else {
         // Create parameter list.
         LLVMTypeRef *params = malloc(sizeof(LLVMTypeRef) * node->param_count);
         for (int i = 0; i < node->param_count; i++) {
@@ -242,42 +245,52 @@ codegen_proto(struct lilc_proto_node_t *node, LLVMModuleRef module,
         func = LLVMAddFunction(module, node->name, funcType);
         LLVMSetLinkage(func, LLVMExternalLinkage);
     }
+
     // Assign parameters to named values lookup.
     for (int i = 0; i < node->param_count; i++) {
-        // Not necessay, but results in more readable IR
+        // Not necessay, but results in more readable IR,
+        // and allows for later arg lookup by name
         LLVMValueRef param = LLVMGetParam(func, i);
         LLVMSetValueName(param, node->params[i]);
         cfuhash_put(named_vals, node->params[i], param);
     }
+
     return func;
 }
 
 static LLVMValueRef
 codegen_funcdef(struct lilc_funcdef_node_t *node, LLVMModuleRef module,
                 LLVMBuilderRef builder, cfuhash_table_t *named_vals) {
-    cfuhash_clear(named_vals);
+    cfuhash_clear(named_vals);  // New scope
+
     // Codegen prototype
     LLVMValueRef func = do_codegen((struct lilc_node_t *)node->proto, module, builder, named_vals);
     if(func == NULL) {
         return NULL;
     }
-    // Name "entry" seems unnecessary
+
+    // Append a new basic block at the end of the function, named "entry"
     LLVMBasicBlockRef block = LLVMAppendBasicBlock(func, "entry");
+    // Tell builder insert new instructions at the end of our new basic block
     LLVMPositionBuilderAtEnd(builder, block);
+
     // Codegen body
     LLVMValueRef body = do_codegen(node->body, module, builder, named_vals);
     if(body == NULL) {
         LLVMDeleteFunction(func);
         return NULL;
     }
+
     // Insert body as return value.
     LLVMBuildRet(builder, body);
+
     // Verify function.
     if(LLVMVerifyFunction(func, LLVMPrintMessageAction) == 1) {
         fprintf(stderr, "Invalid function\n");
         LLVMDeleteFunction(func);
         return NULL;
     }
+
     return func;
 }
 

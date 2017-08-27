@@ -180,7 +180,8 @@ expression(struct parser *p, int rbp) {
     return left;
 }
 
-// expr;
+// funcdef |
+// expression SEMI
 static struct lilc_node_t *
 stmt(struct parser *p) {
     return expression(p, 0);
