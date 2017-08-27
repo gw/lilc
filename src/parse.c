@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "kvec.h"
+
 #include "ast.h"
 #include "lex.h"
 #include "parse.h"
@@ -183,10 +185,17 @@ stmt(struct parser *p) {
 struct lilc_node_t *
 program(struct parser *p) {
     struct lilc_node_t *node;
-    lexer_scan(p->lex);
-    node = stmt(p);
+    struct lilc_block_node_t *block = lilc_block_node_new();
+
+    lexer_scan(p->lex);  // Load first token
+    while (p->lex->tok.cls != LILC_TOK_EOS) {
+        node = stmt(p);
+        kv_push(struct lilc_node_t *, *block->stmts, node);
+        lexer_consumef(p->lex, LILC_TOK_SEMI);
+    }
+
     // TODO check if EOS or error and respond appropriately
-    return node;
+    return block;
 }
 
 void

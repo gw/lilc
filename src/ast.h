@@ -1,10 +1,13 @@
 #ifndef LILC_AST_H
 #define LILC_AST_H
 
+#include "kvec.h"
+
 #include "token.h"
 
 enum node_type {
     LILC_NODE_DBL,
+    LILC_NODE_BLOCK,
     LILC_NODE_VAR,
     LILC_NODE_EXPR,
     LILC_NODE_OP_BIN,
@@ -20,6 +23,13 @@ enum node_type {
 // Base data shared by all nodes
 struct lilc_node_t {
     enum node_type type;
+};
+
+// Block node
+typedef kvec_t(struct lilc_node_t *) node_vec_t;
+struct lilc_block_node_t {
+    struct lilc_node_t base;
+    node_vec_t *stmts;
 };
 
 // Double immediate node
@@ -70,6 +80,9 @@ struct lilc_funccall_node_t {
  */
 struct lilc_dbl_node_t *
 lilc_dbl_node_new(double val);
+
+struct lilc_block_node_t *
+lilc_block_node_new(void);
 
 struct lilc_var_node_t *
 lilc_var_node_new(char *name);

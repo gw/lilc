@@ -1,4 +1,5 @@
-include_directories(../src)
+include_directories(${CMAKE_SOURCE_DIR}/src)
+include_directories(${CMAKE_SOURCE_DIR}/lib)
 
 add_executable(LILC_TEST test.c)
 target_link_libraries(LILC_TEST LILC_CORE)

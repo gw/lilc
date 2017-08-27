@@ -1,1 +1,2 @@
 add_library(CFU cfu.c cfu.h cfuhash.c cfuhash.h cfustring.c cfustring.h)
+# add_library(KLIB kvec.h)

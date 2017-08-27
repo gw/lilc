@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "kvec.h"
+
 #include "ast.h"
 #include "lex.h"
 
@@ -19,6 +21,15 @@ lilc_dbl_node_new(double val) {
     struct lilc_dbl_node_t *node = malloc(sizeof(struct lilc_dbl_node_t));
     node->base.type = LILC_NODE_DBL;
     node->val = val;
+    return node;
+};
+
+struct lilc_block_node_t *
+lilc_block_node_new(void) {
+    struct lilc_block_node_t *node = malloc(sizeof(struct lilc_block_node_t));
+    node->base.type = LILC_NODE_BLOCK;
+    node->stmts = (node_vec_t *)malloc(sizeof(node_vec_t));
+    kv_init(*node->stmts);
     return node;
 };
 
@@ -96,6 +107,15 @@ ast_readf(char *buf, int i, struct lilc_node_t *node) {
             i += sprintf(buf + i, "dbl ");
             i += sprintf(buf + i, "%.1f", ((struct lilc_dbl_node_t *)node)->val);
             break;
+        case LILC_NODE_BLOCK: {
+            struct lilc_block_node_t *n = (struct lilc_block_node_t *)node;
+            i += sprintf(buf + i, "block\n");
+            for (int j = 0; j < kv_size(*n->stmts); j++) {
+                i = ast_readf(buf, i, kv_A(*n->stmts, j));
+                i += sprintf(buf + i, "\n");
+            }
+            break;
+        }
         case LILC_NODE_VAR:
             i += sprintf(buf + i, "var ");
             i += sprintf(buf + i, "%s", ((struct lilc_var_node_t *)node)->name);

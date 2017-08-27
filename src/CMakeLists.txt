@@ -5,6 +5,7 @@ find_package(LLVM REQUIRED CONFIG)
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Found LLVMConfig.cmake in: ${LLVM_DIR}")
 
+include_directories(${CMAKE_SOURCE_DIR}/lib)
 include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
@@ -18,5 +19,4 @@ llvm_map_components_to_libnames(llvm_libs all)
 
 add_library(LILC_CORE ast.c ast.h codegen.c codegen.h lex.c lex.h parse.c parse.h token.c token.h util.c util.h)
 
-include_directories(../lib)
 target_link_libraries(LILC_CORE CFU ${llvm_libs})

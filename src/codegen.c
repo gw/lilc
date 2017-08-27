@@ -9,6 +9,7 @@
 #include <llvm-c/Transforms/Scalar.h>
 
 #include "cfuhash.h"
+#include "kvec.h"
 
 #include "ast.h"
 #include "codegen.h"
@@ -163,6 +164,23 @@ codegen_var(struct lilc_var_node_t *node, cfuhash_table_t *named_vals) {
     return val;
 }
 
+// Currently, blocks evaluate to the value of the last statement within
+// them. Not sure how that will end up interacting with the 'return'
+// keyword if I end up implementing that but I'll come back to it later.
+// TODO: Implement block-scoping
+static LLVMValueRef
+codegen_block(struct lilc_block_node_t *node, LLVMModuleRef module,
+              LLVMBuilderRef builder, cfuhash_table_t *named_vals) {
+    LLVMValueRef val;
+    for (int i = 0; i < kv_size(*node->stmts); i++) {
+        val = do_codegen(kv_A(*node->stmts, i), module, builder, named_vals);
+        if (!val) {
+            return NULL;
+        }
+    }
+    return val;
+}
+
 static LLVMValueRef
 codegen_binop(struct lilc_bin_op_node_t *node, LLVMModuleRef module,
               LLVMBuilderRef builder, cfuhash_table_t *named_vals) {
@@ -273,6 +291,9 @@ do_codegen(struct lilc_node_t *node, LLVMModuleRef module,
         }
         case LILC_NODE_VAR: {
             return codegen_var((struct lilc_var_node_t *)node, named_vals);
+        }
+        case LILC_NODE_BLOCK: {
+            return codegen_block((struct lilc_block_node_t *)node, module, builder, named_vals);
         }
         case LILC_NODE_OP_BIN: {
             return codegen_binop((struct lilc_bin_op_node_t *)node, module, builder, named_vals);
