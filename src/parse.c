@@ -86,12 +86,17 @@ funcdef_prefix(struct parser *p, struct token t) {
 
     char *params[MAX_FUNC_PARAMS];
     unsigned int param_count = 0;
-    do {
+    while (p->lex->tok.cls != LILC_TOK_RPAREN && param_count <= MAX_FUNC_PARAMS) {
+        if (p->lex->tok.cls != LILC_TOK_ID) {
+            fprintf(stderr, "Expected id, got %s", lilc_token_str[p->lex->tok.cls]);
+            exit(1);
+        }
         params[param_count++] = p->lex->tok.val.as_str;
         lexer_scan(p->lex);
-    } while (lexer_consume(p->lex, LILC_TOK_COMMA));
+        lexer_consume(p->lex, LILC_TOK_COMMA);
+    }
 
-    if (param_count > MAX_FUNC_PARAMS) {
+    if (param_count == MAX_FUNC_PARAMS) {
         fprintf(stderr, "Too many params for function %s\n", name);
         exit(1);
     }

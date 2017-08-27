@@ -132,11 +132,15 @@ ast_readf(char *buf, int i, struct lilc_node_t *node) {
             break;
         case LILC_NODE_PROTO: {
             struct lilc_proto_node_t *n = (struct lilc_proto_node_t *)node;
-            i += sprintf(buf + i, "%s [", n->name);
-            for (int j = 0; j < n->param_count; j++) {
-                i += sprintf(buf + i, "%s,", n->params[j]);
+            i += sprintf(buf + i, "%s", n->name);
+            // Param list
+            i += sprintf(buf + i, "[");
+            if (n->param_count > 0) {
+                for (int j = 0; j < n->param_count; j++) {
+                    i += sprintf(buf + i, "%s,", n->params[j]);
+                }
+                i--;  // Delete trailing comma
             }
-            i--;  // Delete trailing comma
             i += sprintf(buf + i, "]");
             break;
         }
