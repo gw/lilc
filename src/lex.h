@@ -11,10 +11,10 @@ struct lexer {
     struct token tok; // Tokenized interpretation of current character
 };
 
-void lex_init(struct lexer *lex, char *source);
-int lex_consume(struct lexer *lex, enum tok_type want);
-int lex_consumef(struct lexer *lex, enum tok_type want);
-enum tok_type lex_scan(struct lexer *lex);
-int tok_strm_readf(char *buf, struct lexer *lex);
+void lex_init(struct lexer *l, char *source);
+int lex_consume(struct lexer *l, enum tok_type want);
+int lex_consumef(struct lexer *l, enum tok_type want);
+enum tok_type lex_scan(struct lexer *l);
+int tok_strm_readf(char *buf, struct lexer *l);
 
 #endif

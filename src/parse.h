@@ -15,6 +15,6 @@ struct lilc_node_t *
 program(struct parser *);
 
 void
-parser_init(struct parser *parse, struct lexer *lex);
+parser_init(struct parser *parse, struct lexer *l);
 
 #endif

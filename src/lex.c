@@ -7,13 +7,13 @@
 #include "token.h"
 
 static enum tok_type
-set_tok_type(struct lexer *lex, enum tok_type t) {
-    return lex->tok.cls = t;
+set_tok_type(struct lexer *l, enum tok_type t) {
+    return l->tok.cls = t;
 }
 
 static void
-lex_putback(struct lexer *lex) {
-    lex->offset--;
+lex_putback(struct lexer *l) {
+    l->offset--;
 }
 
 #define MAX_IDENT 64
@@ -21,67 +21,67 @@ lex_putback(struct lexer *lex) {
 // Identifiers must be <= 64 char long and can contain
 // alphas, nums, and '_', but must start with an alpha.
 static enum tok_type
-consume_id(struct lexer *lex, char c) {
+consume_id(struct lexer *l, char c) {
     char buf[MAX_IDENT];
     int i = 0;
 
     do {
         buf[i++] = c;
     } while (
-        (isalpha(c = lex->source[lex->offset++]) || isdigit(c) || c == '_') &&
+        (isalpha(c = l->source[l->offset++]) || isdigit(c) || c == '_') &&
         i < MAX_IDENT - 1
     );
     buf[i] = '\0';
-    lex_putback(lex);
+    lex_putback(l);
 
     if (strcmp(buf, "def") == 0) {
-        return set_tok_type(lex, LILC_TOK_DEF);
+        return set_tok_type(l, LILC_TOK_DEF);
     } else {
         // Non-keyword identifier
-        lex->tok.val.as_str = strdup(buf);
-        return set_tok_type(lex, LILC_TOK_ID);
+        l->tok.val.as_str = strdup(buf);
+        return set_tok_type(l, LILC_TOK_ID);
     }
 }
 
 // Tokenize an entire number.
 // Only floats supported for now
 static enum tok_type
-consume_number(struct lexer *lex, char c) {
+consume_number(struct lexer *l, char c) {
     double n = 0;
     do {
         n = n * 10 + (c - '0');
-    } while (isdigit(c = lex->source[lex->offset++]));
-    lex_putback(lex);
+    } while (isdigit(c = l->source[l->offset++]));
+    lex_putback(l);
 
-    lex->tok.val.as_dbl = n;
-    return set_tok_type(lex, LILC_TOK_DBL);
+    l->tok.val.as_dbl = n;
+    return set_tok_type(l, LILC_TOK_DBL);
 }
 
 // Scan the next token in the source input.
 // Returns the class of the scanned token, dies on error.
 enum tok_type
-lex_scan(struct lexer *lex) {
+lex_scan(struct lexer *l) {
     char c;
     while (1) {
-        c = lex->source[lex->offset++];
+        c = l->source[l->offset++];
         switch (c) {
             case ' ':
             case '\n':  // TODO incr line number for debugging
             case '\t': continue;
-            case ',': return set_tok_type(lex, LILC_TOK_COMMA);
-            case ';': return set_tok_type(lex, LILC_TOK_SEMI);
-            case '(': return set_tok_type(lex, LILC_TOK_LPAREN);
-            case ')': return set_tok_type(lex, LILC_TOK_RPAREN);
-            case '{': return set_tok_type(lex, LILC_TOK_LCURL);
-            case '}': return set_tok_type(lex, LILC_TOK_RCURL);
-            case '+': return set_tok_type(lex, LILC_TOK_ADD);
-            case '-': return set_tok_type(lex, LILC_TOK_SUB);
-            case '*': return set_tok_type(lex, LILC_TOK_MUL);
-            case '/': return set_tok_type(lex, LILC_TOK_DIV);
-            case '\0': return set_tok_type(lex, LILC_TOK_EOS);
+            case ',': return set_tok_type(l, LILC_TOK_COMMA);
+            case ';': return set_tok_type(l, LILC_TOK_SEMI);
+            case '(': return set_tok_type(l, LILC_TOK_LPAREN);
+            case ')': return set_tok_type(l, LILC_TOK_RPAREN);
+            case '{': return set_tok_type(l, LILC_TOK_LCURL);
+            case '}': return set_tok_type(l, LILC_TOK_RCURL);
+            case '+': return set_tok_type(l, LILC_TOK_ADD);
+            case '-': return set_tok_type(l, LILC_TOK_SUB);
+            case '*': return set_tok_type(l, LILC_TOK_MUL);
+            case '/': return set_tok_type(l, LILC_TOK_DIV);
+            case '\0': return set_tok_type(l, LILC_TOK_EOS);
             default:
-                if (isalpha(c)) return consume_id(lex, c);
-                if (isdigit(c)) return consume_number(lex, c);
+                if (isalpha(c)) return consume_id(l, c);
+                if (isdigit(c)) return consume_number(l, c);
                 fprintf(stderr, "Unrecognized input char: '%c'\n", c);
                 exit(1);
         }
@@ -92,10 +92,10 @@ lex_scan(struct lexer *lex) {
 // If assertion passes, returns 1 and advances lexer,
 // otherwise returns 0 and does not advance lexer.
 int
-lex_consume(struct lexer *lex, enum tok_type want) {
-    enum tok_type curr = lex->tok.cls;
+lex_consume(struct lexer *l, enum tok_type want) {
+    enum tok_type curr = l->tok.cls;
     if (curr == want) {
-        lex_scan(lex);
+        lex_scan(l);
         return 1;
     } else {
         return 0;
@@ -106,12 +106,12 @@ lex_consume(struct lexer *lex, enum tok_type want) {
 // If assertion passes, returns 1 and advances lexer,
 // otherwise prints an error message and dies.
 int
-lex_consumef(struct lexer *lex, enum tok_type want) {
-    if (!lex_consume(lex, want)) {
+lex_consumef(struct lexer *l, enum tok_type want) {
+    if (!lex_consume(l, want)) {
         fprintf(
             stderr,
             "Expected token '%s', got '%s'\n",
-            lilc_token_str[want], lilc_token_str[lex->tok.cls]
+            lilc_token_str[want], lilc_token_str[l->tok.cls]
         );
         exit(1);
     }
@@ -123,21 +123,21 @@ lex_consumef(struct lexer *lex, enum tok_type want) {
 // Not bothering with safe, bounded buffer wrting, as I'd just use a dynamic
 // array instead.
 int
-tok_strm_readf(char *buf, struct lexer *lex) {
+tok_strm_readf(char *buf, struct lexer *l) {
     int i = 0;
-    while (lex_scan(lex)) {
+    while (lex_scan(l)) {
         i += sprintf(buf + i, "<");
-        switch (lex->tok.cls) {
+        switch (l->tok.cls) {
             case LILC_TOK_DBL:
-                i += sprintf(buf + i, "%s,", lilc_token_str[lex->tok.cls]);
-                i += sprintf(buf + i, "%.1f", lex->tok.val.as_dbl);
+                i += sprintf(buf + i, "%s,", lilc_token_str[l->tok.cls]);
+                i += sprintf(buf + i, "%.1f", l->tok.val.as_dbl);
                 break;
             case LILC_TOK_ID:
-                i += sprintf(buf + i, "%s,", lilc_token_str[lex->tok.cls]);
-                i += sprintf(buf + i, "%s", lex->tok.val.as_str);
+                i += sprintf(buf + i, "%s,", lilc_token_str[l->tok.cls]);
+                i += sprintf(buf + i, "%s", l->tok.val.as_str);
                 break;
             default:
-                i += sprintf(buf + i, "%s", lilc_token_str[lex->tok.cls]);
+                i += sprintf(buf + i, "%s", lilc_token_str[l->tok.cls]);
                 break;
         }
         i += sprintf(buf + i, ">");
@@ -146,7 +146,7 @@ tok_strm_readf(char *buf, struct lexer *lex) {
 }
 
 void
-lex_init(struct lexer *lex, char *source) {
-    lex->source = source;
-    lex->offset = 0;
+lex_init(struct lexer *l, char *source) {
+    l->source = source;
+    l->offset = 0;
 }

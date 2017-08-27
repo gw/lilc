@@ -205,6 +205,6 @@ program(struct parser *p) {
 }
 
 void
-parser_init(struct parser *p, struct lexer *lex) {
-    p->lex = lex;
+parser_init(struct parser *p, struct lexer *l) {
+    p->lex = l;
 }
