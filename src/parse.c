@@ -48,7 +48,7 @@ lparen_prefix(struct parser *p, struct token t) {
     // expressions are always subexpressions of
     // any containing expression they're part of.
     struct lilc_node_t *node = expression(p, 0);
-    lexer_consumef(p->lex, LILC_TOK_RPAREN);
+    lex_consumef(p->lex, LILC_TOK_RPAREN);
     return node;
 }
 
@@ -62,9 +62,9 @@ lparen_infix(struct parser *p, struct token t, struct lilc_node_t *left) {
 
     do {
         args[arg_count++] = expression(p, 0);
-    } while (lexer_consume(p->lex, LILC_TOK_COMMA));
+    } while (lex_consume(p->lex, LILC_TOK_COMMA));
 
-    lexer_consumef(p->lex, LILC_TOK_RPAREN);
+    lex_consumef(p->lex, LILC_TOK_RPAREN);
 
     char *name = ((struct lilc_var_node_t *)left)->name;
     return (struct lilc_node_t *)lilc_funccall_node_new(name, args, arg_count);
@@ -80,9 +80,9 @@ bin_op_infix(struct parser *p, struct token t, struct lilc_node_t *left) {
 static struct lilc_node_t *
 funcdef_prefix(struct parser *p, struct token t) {
     char *name = p->lex->tok.val.as_str;
-    lexer_consumef(p->lex, LILC_TOK_ID);
+    lex_consumef(p->lex, LILC_TOK_ID);
 
-    lexer_consumef(p->lex, LILC_TOK_LPAREN);
+    lex_consumef(p->lex, LILC_TOK_LPAREN);
 
     char *params[MAX_FUNC_PARAMS];
     unsigned int param_count = 0;
@@ -92,8 +92,8 @@ funcdef_prefix(struct parser *p, struct token t) {
             exit(1);
         }
         params[param_count++] = p->lex->tok.val.as_str;
-        lexer_scan(p->lex);
-        lexer_consume(p->lex, LILC_TOK_COMMA);
+        lex_scan(p->lex);
+        lex_consume(p->lex, LILC_TOK_COMMA);
     }
 
     if (param_count == MAX_FUNC_PARAMS) {
@@ -101,12 +101,12 @@ funcdef_prefix(struct parser *p, struct token t) {
         exit(1);
     }
 
-    lexer_consumef(p->lex, LILC_TOK_RPAREN);
-    lexer_consumef(p->lex, LILC_TOK_LCURL);
+    lex_consumef(p->lex, LILC_TOK_RPAREN);
+    lex_consumef(p->lex, LILC_TOK_LCURL);
 
     struct lilc_node_t *body = expression(p, 0);
 
-    lexer_consumef(p->lex, LILC_TOK_RCURL);
+    lex_consumef(p->lex, LILC_TOK_RCURL);
 
     struct lilc_proto_node_t *proto = lilc_proto_node_new(name, params, param_count);
     return (struct lilc_node_t *)lilc_funcdef_node_new(proto, body);
@@ -166,7 +166,7 @@ expression(struct parser *p, int rbp) {
     struct lilc_node_t *left;
 
     t = p->lex->tok;
-    lexer_scan(p->lex);
+    lex_scan(p->lex);
     left = vtables[t.cls].as_prefix(p, t);
 
     // Precedence climbing! Any expression on the right side
@@ -174,7 +174,7 @@ expression(struct parser *p, int rbp) {
     // a subexpression, so we want to continue parsing it!
     while (rbp < vtables[p->lex->tok.cls].lbp) {
         t = p->lex->tok;
-        lexer_scan(p->lex);
+        lex_scan(p->lex);
         left = vtables[t.cls].as_infix(p, t, left);
     }
     return left;
@@ -193,11 +193,11 @@ program(struct parser *p) {
     struct lilc_node_t *node;
     struct lilc_block_node_t *block = lilc_block_node_new();
 
-    lexer_scan(p->lex);  // Load first token
+    lex_scan(p->lex);  // Load first token
     while (p->lex->tok.cls != LILC_TOK_EOS) {
         node = stmt(p);
         kv_push(struct lilc_node_t *, *block->stmts, node);
-        lexer_consumef(p->lex, LILC_TOK_SEMI);
+        lex_consumef(p->lex, LILC_TOK_SEMI);
     }
 
     // TODO check if EOS or error and respond appropriately

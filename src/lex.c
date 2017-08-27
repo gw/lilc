@@ -12,7 +12,7 @@ set_tok_type(struct lexer *lex, enum tok_type t) {
 }
 
 static void
-lexer_putback(struct lexer *lex) {
+lex_putback(struct lexer *lex) {
     lex->offset--;
 }
 
@@ -32,7 +32,7 @@ consume_id(struct lexer *lex, char c) {
         i < MAX_IDENT - 1
     );
     buf[i] = '\0';
-    lexer_putback(lex);
+    lex_putback(lex);
 
     if (strcmp(buf, "def") == 0) {
         return set_tok_type(lex, LILC_TOK_DEF);
@@ -51,7 +51,7 @@ consume_number(struct lexer *lex, char c) {
     do {
         n = n * 10 + (c - '0');
     } while (isdigit(c = lex->source[lex->offset++]));
-    lexer_putback(lex);
+    lex_putback(lex);
 
     lex->tok.val.as_dbl = n;
     return set_tok_type(lex, LILC_TOK_DBL);
@@ -60,7 +60,7 @@ consume_number(struct lexer *lex, char c) {
 // Scan the next token in the source input.
 // Returns the class of the scanned token, dies on error.
 enum tok_type
-lexer_scan(struct lexer *lex) {
+lex_scan(struct lexer *lex) {
     char c;
     while (1) {
         c = lex->source[lex->offset++];
@@ -92,10 +92,10 @@ lexer_scan(struct lexer *lex) {
 // If assertion passes, returns 1 and advances lexer,
 // otherwise returns 0 and does not advance lexer.
 int
-lexer_consume(struct lexer *lex, enum tok_type want) {
+lex_consume(struct lexer *lex, enum tok_type want) {
     enum tok_type curr = lex->tok.cls;
     if (curr == want) {
-        lexer_scan(lex);
+        lex_scan(lex);
         return 1;
     } else {
         return 0;
@@ -106,8 +106,8 @@ lexer_consume(struct lexer *lex, enum tok_type want) {
 // If assertion passes, returns 1 and advances lexer,
 // otherwise prints an error message and dies.
 int
-lexer_consumef(struct lexer *lex, enum tok_type want) {
-    if (!lexer_consume(lex, want)) {
+lex_consumef(struct lexer *lex, enum tok_type want) {
+    if (!lex_consume(lex, want)) {
         fprintf(
             stderr,
             "Expected token '%s', got '%s'\n",
@@ -125,7 +125,7 @@ lexer_consumef(struct lexer *lex, enum tok_type want) {
 int
 tok_strm_readf(char *buf, struct lexer *lex) {
     int i = 0;
-    while (lexer_scan(lex)) {
+    while (lex_scan(lex)) {
         i += sprintf(buf + i, "<");
         switch (lex->tok.cls) {
             case LILC_TOK_DBL:
@@ -146,7 +146,7 @@ tok_strm_readf(char *buf, struct lexer *lex) {
 }
 
 void
-lexer_init(struct lexer *lex, char *source) {
+lex_init(struct lexer *lex, char *source) {
     lex->source = source;
     lex->offset = 0;
 }
