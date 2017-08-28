@@ -167,6 +167,10 @@ expression(struct parser *p, int rbp) {
 
     t = p->lex->tok;
     lex_scan(p->lex);
+    if (!vtables[t.cls].as_prefix) {
+        fprintf(stderr, "No prefix function for token '%s'", lilc_token_str[t.cls]);
+        exit(1);
+    }
     left = vtables[t.cls].as_prefix(p, t);
 
     // Precedence climbing! Any expression on the right side
@@ -175,6 +179,10 @@ expression(struct parser *p, int rbp) {
     while (rbp < vtables[p->lex->tok.cls].lbp) {
         t = p->lex->tok;
         lex_scan(p->lex);
+        if (!vtables[t.cls].as_infix) {
+            fprintf(stderr, "No infix function for token '%s'", lilc_token_str[t.cls]);
+            exit(1);
+        }
         left = vtables[t.cls].as_infix(p, t, left);
     }
     return left;
