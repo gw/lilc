@@ -142,7 +142,7 @@ ast_readf(char *buf, int i, struct lilc_node_t *node) {
         }
         case LILC_NODE_FUNCCALL: {
             struct lilc_funccall_node_t *n = (struct lilc_funccall_node_t *)node;
-            i += sprintf(buf + i, "call %s ", n->name);
+            i += sprintf(buf + i, "call %s", n->name);
             for (int j = 0; j < n->arg_count; j++) {
                 i = ast_readf(buf, i, n->args[j]);
             }

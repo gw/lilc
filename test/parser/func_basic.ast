@@ -1,4 +1,4 @@
 (block
 (funcdef (foo[arg1,arg2])(+ (var arg1)(var arg2)))
-(funcdef (main[])(call foo (dbl 1.0)(dbl 2.0)))
+(funcdef (main[])(call foo(dbl 1.0)(dbl 2.0)))
 )
