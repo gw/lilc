@@ -86,8 +86,8 @@ funcdef_prefix(struct parser *p, struct token t) {
 
     char *params[MAX_FUNC_PARAMS];
     unsigned int param_count = 0;
-    while (p->lex->tok.cls != LILC_TOK_RPAREN && param_count <= MAX_FUNC_PARAMS) {
-        if (p->lex->tok.cls != LILC_TOK_ID) {
+    while (!lex_is(p->lex, LILC_TOK_RPAREN) && param_count <= MAX_FUNC_PARAMS) {
+        if (!lex_is(p->lex, LILC_TOK_ID)) {
             fprintf(stderr, "Expected id, got %s", lilc_token_str[p->lex->tok.cls]);
             exit(1);
         }
@@ -194,7 +194,7 @@ program(struct parser *p) {
     struct lilc_block_node_t *block = lilc_block_node_new();
 
     lex_scan(p->lex);  // Load first token
-    while (p->lex->tok.cls != LILC_TOK_EOS) {
+    while (!lex_is(p->lex, LILC_TOK_EOS)) {
         node = stmt(p);
         kv_push(struct lilc_node_t *, *block->stmts, node);
         lex_consumef(p->lex, LILC_TOK_SEMI);
