@@ -59,11 +59,10 @@ static struct lilc_node_t *
 lparen_infix(struct parser *p, struct token t, struct lilc_node_t *left) {
     struct lilc_node_t *args[MAX_FUNC_PARAMS];
     unsigned int arg_count = 0;
-
-    do {
+    while (!lex_is(p->lex, LILC_TOK_RPAREN) && arg_count <= MAX_FUNC_PARAMS) {
         args[arg_count++] = expression(p, 0);
-    } while (lex_consume(p->lex, LILC_TOK_COMMA));
-
+        lex_consume(p->lex, LILC_TOK_COMMA);
+    }
     lex_consumef(p->lex, LILC_TOK_RPAREN);
 
     char *name = ((struct lilc_var_node_t *)left)->name;
