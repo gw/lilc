@@ -201,7 +201,7 @@ program(struct parser *p) {
     }
 
     // TODO check if EOS or error and respond appropriately
-    return block;
+    return (struct lilc_node_t *)block;
 }
 
 void

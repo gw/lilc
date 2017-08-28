@@ -9,7 +9,6 @@ enum node_type {
     LILC_NODE_DBL,
     LILC_NODE_BLOCK,
     LILC_NODE_VAR,
-    LILC_NODE_EXPR,
     LILC_NODE_OP_BIN,
     LILC_NODE_PROTO,
     LILC_NODE_FUNCDEF,
