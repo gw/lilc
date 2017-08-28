@@ -84,11 +84,7 @@ lilc_funccall_node_new(char *name, struct lilc_node_t **args, unsigned int arg_c
     node->name = name;
 
     // Copy args pointer array to heap
-    // TODO: refactor to an AST union type, so we can easily
-    // always allocate enough space for the largest possible
-    // node here, instead of hardcoding bin_op_node here just
-    // cuz it's big
-    node->args = malloc(sizeof(struct lilc_bin_op_node_t) * arg_count);
+    node->args = malloc(sizeof(union lilc_ast_union_t) * arg_count);
     for(int i = 0; i < arg_count; i++) {
         node->args[i] = args[i];
     }

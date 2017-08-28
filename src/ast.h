@@ -75,6 +75,21 @@ struct lilc_funccall_node_t {
     unsigned int arg_count;
 };
 
+// Union struct--ends up being the width of the largest
+// member. Only used in places where you need to allocate
+// space for an AST node whose type you don't know in advance
+// (e.g. funccall_node_new) and thus need to allocate enough
+// space to fit the largest possible node type.
+union lilc_ast_union_t {
+    struct lilc_block_node_t a;
+    struct lilc_dbl_node_t b;
+    struct lilc_var_node_t c;
+    struct lilc_bin_op_node_t d;
+    struct lilc_proto_node_t e;
+    struct lilc_funcdef_node_t f;
+    struct lilc_funccall_node_t g;
+};
+
 /*
  *Constructors
  */
