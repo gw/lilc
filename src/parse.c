@@ -113,14 +113,7 @@ funcdef_prefix(struct parser *p, struct token t) {
 
 // Lookup array for token vtable implementations
 struct vtable vtables[] = {
-    [LILC_TOK_EOS] = {
-        .lbp = 0,
-    },
-    [LILC_TOK_SEMI] = {
-        .lbp = 0,
-    },
     [LILC_TOK_DEF] = {
-        .lbp = 0,
         .as_prefix = funcdef_prefix,
     },
     [LILC_TOK_LPAREN] = {
