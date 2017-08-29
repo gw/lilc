@@ -5,14 +5,13 @@
 #include "lex.h"
 #include "token.h"
 
-// Parser state. Thin wrapper around the lexer, may end up containing some extra
-// info for debugging, but not super useful right now.
 struct parser {
     struct lexer *lex;
+    char *err;
 };
 
 struct lilc_node_t *
-program(struct parser *);
+parse(struct parser *p);
 
 void
 parser_init(struct parser *parse, struct lexer *l);

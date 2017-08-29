@@ -8,6 +8,13 @@
 #include "lex.h"
 #include "parse.h"
 #include "token.h"
+#include "util.h"
+
+static void *
+err(struct parser *p, char *msg) {
+    p->err = msg;
+    return NULL;
+}
 
 // Interface for parsing-related functionality for each token type.
 struct vtable {
@@ -58,9 +65,15 @@ lparen_prefix(struct parser *p, struct token t) {
 static struct lilc_node_t *
 lparen_infix(struct parser *p, struct token t, struct lilc_node_t *left) {
     struct lilc_node_t *args[MAX_FUNC_PARAMS];
+    struct lilc_node_t *arg;
     unsigned int arg_count = 0;
     while (!lex_is(p->lex, LILC_TOK_RPAREN) && arg_count <= MAX_FUNC_PARAMS) {
-        args[arg_count++] = expression(p, 0);
+        if (!(arg = expression(p, 0))) {
+            return err(p, "Could not parse call argument\n");
+        }
+
+        args[arg_count++] = arg;
+
         lex_consume(p->lex, LILC_TOK_COMMA);
     }
     lex_consumef(p->lex, LILC_TOK_RPAREN);
@@ -72,7 +85,13 @@ lparen_infix(struct parser *p, struct token t, struct lilc_node_t *left) {
 // "+", "-", "*", "/"
 static struct lilc_node_t *
 bin_op_infix(struct parser *p, struct token t, struct lilc_node_t *left) {
-    return (struct lilc_node_t *)lilc_bin_op_node_new(left, expression(p, vtables[t.cls].lbp), t.cls);
+    struct lilc_node_t *right = expression(p, vtables[t.cls].lbp);
+
+    if (!right) {
+        return err(p, "Could not parse right operand of binary expr\n");
+    }
+
+    return (struct lilc_node_t *)lilc_bin_op_node_new(left, right, t.cls);
 }
 
 // "def"
@@ -83,12 +102,12 @@ funcdef_prefix(struct parser *p, struct token t) {
 
     lex_consumef(p->lex, LILC_TOK_LPAREN);
 
+    // Parse parameter list
     char *params[MAX_FUNC_PARAMS];
     unsigned int param_count = 0;
     while (!lex_is(p->lex, LILC_TOK_RPAREN) && param_count <= MAX_FUNC_PARAMS) {
         if (!lex_is(p->lex, LILC_TOK_ID)) {
-            fprintf(stderr, "Expected id, got %s", lilc_token_str[p->lex->tok.cls]);
-            exit(1);
+            return err(p, "funcdef params: Expected identifier\n");
         }
         params[param_count++] = p->lex->tok.val.as_str;
         lex_scan(p->lex);
@@ -96,8 +115,7 @@ funcdef_prefix(struct parser *p, struct token t) {
     }
 
     if (param_count == MAX_FUNC_PARAMS) {
-        fprintf(stderr, "Too many params for function %s\n", name);
-        exit(1);
+        return err(p, "funcdef: Too many parameters\n");
     }
 
     lex_consumef(p->lex, LILC_TOK_RPAREN);
@@ -160,8 +178,7 @@ expression(struct parser *p, int rbp) {
     t = p->lex->tok;
     lex_scan(p->lex);
     if (!vtables[t.cls].as_prefix) {
-        fprintf(stderr, "No prefix function for token '%s'", lilc_token_str[t.cls]);
-        exit(1);
+        return err(p, "expression: No prefix function found\n");
     }
     left = vtables[t.cls].as_prefix(p, t);
 
@@ -172,8 +189,7 @@ expression(struct parser *p, int rbp) {
         t = p->lex->tok;
         lex_scan(p->lex);
         if (!vtables[t.cls].as_infix) {
-            fprintf(stderr, "No infix function for token '%s'", lilc_token_str[t.cls]);
-            exit(1);
+            return err(p, "expression: No infix function found\n");
         }
         left = vtables[t.cls].as_infix(p, t, left);
     }
@@ -188,20 +204,31 @@ stmt(struct parser *p) {
 }
 
 // stmt+
-struct lilc_node_t *
+static struct lilc_node_t *
 program(struct parser *p) {
     struct lilc_node_t *node;
     struct lilc_block_node_t *block = lilc_block_node_new();
 
     lex_scan(p->lex);  // Load first token
     while (!lex_is(p->lex, LILC_TOK_EOS)) {
-        node = stmt(p);
+        if (!(node = stmt(p))) return NULL;
         kv_push(struct lilc_node_t *, *block->stmts, node);
         lex_consumef(p->lex, LILC_TOK_SEMI);
     }
 
     // TODO check if EOS or error and respond appropriately
     return (struct lilc_node_t *)block;
+}
+
+// Parse a Lilc program. Returns a pointer to the root node
+// upon successful parsing--otherwise crashes.
+struct lilc_node_t *
+parse(struct parser *p) {
+    struct lilc_node_t *root;
+    if (!(root = program(p))) {
+        die(p->lex->filename, p->lex->lineno, p->err);
+    }
+    return root;
 }
 
 void
