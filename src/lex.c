@@ -138,12 +138,15 @@ lex_consume(struct lexer *l, enum tok_type t) {
 int
 lex_consumef(struct lexer *l, enum tok_type t) {
     if (!lex_consume(l, t)) {
-        fprintf(
-            stderr,
-            "Expected token '%s', got '%s'\n",
-            lilc_token_str[t], lilc_token_str[l->tok.cls]
+        char buf[128];
+        snprintf(
+            buf,
+            128,
+            "Expected '%s' but saw '%s'\n",
+            lilc_token_str[t],
+            lilc_token_str[l->tok.cls]
         );
-        exit(1);
+        die(l->filename, l->lineno, buf);
     }
     return 1;
 }
