@@ -18,7 +18,7 @@ test_lexer(char *src_path, char *want_path) {
     char *want  = read_file(want_path);
 
     struct lexer lex;
-    lex_init(&lex, src);
+    lex_init(&lex, src, src_path);
 
     char got[MAX_TOK_STR] = {0};
     int b = tok_strm_readf(got, &lex);
@@ -40,7 +40,7 @@ test_parser(char *src_path, char *want_path) {
 
     struct lexer lex;
     struct parser parse;
-    lex_init(&lex, src);
+    lex_init(&lex, src, src_path);
     parser_init(&parse, &lex);
 
     struct lilc_node_t *node;
@@ -64,7 +64,7 @@ test_codegen(char *src_path, char *want_path) {
 
     struct lexer lex;
     struct parser parse;
-    lex_init(&lex, src);
+    lex_init(&lex, src, src_path);
     parser_init(&parse, &lex);
 
     struct lilc_node_t *node;

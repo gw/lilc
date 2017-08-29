@@ -2,6 +2,7 @@
 #define LILC_TOKEN_H
 
 enum tok_type {
+    LILC_TOK_ERR,
     LILC_TOK_EOS,
     LILC_TOK_ID,
     LILC_TOK_DEF,

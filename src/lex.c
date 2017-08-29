@@ -5,6 +5,21 @@
 
 #include "lex.h"
 #include "token.h"
+#include "util.h"
+
+void
+lex_init(struct lexer *l, char *source, char *path) {
+    l->filename = path;
+    l->source = source;
+    l->offset = 0;
+    l->lineno = 1;
+    l->err = NULL;
+}
+
+static void
+err(struct lexer *l, char *msg) {
+    l->err = msg;
+}
 
 static enum tok_type
 set_tok_type(struct lexer *l, enum tok_type t) {
@@ -59,14 +74,14 @@ consume_number(struct lexer *l, char c) {
 
 // Scan the next token in the source input.
 // Returns the class of the scanned token, dies on error.
-enum tok_type
-lex_scan(struct lexer *l) {
+static enum tok_type
+_lex_scan(struct lexer *l) {
     char c;
     while (1) {
         c = l->source[l->offset++];
         switch (c) {
+            case '\n': l->lineno++;
             case ' ':
-            case '\n':  // TODO incr line number for debugging
             case '\t': continue;
             case ',': return set_tok_type(l, LILC_TOK_COMMA);
             case ';': return set_tok_type(l, LILC_TOK_SEMI);
@@ -82,10 +97,19 @@ lex_scan(struct lexer *l) {
             default:
                 if (isalpha(c)) return consume_id(l, c);
                 if (isdigit(c)) return consume_number(l, c);
-                fprintf(stderr, "Unrecognized input char: '%c'\n", c);
-                exit(1);
+                err(l, "LEX - Unrecognized input character\n");
+                return set_tok_type(l, LILC_TOK_ERR);
         }
     }
+}
+
+enum tok_type
+lex_scan(struct lexer *l) {
+    enum tok_type t;
+    if ((t = _lex_scan(l)) == LILC_TOK_ERR) {
+        die(l->filename, l->lineno, l->err);
+    }
+    return t;
 }
 
 // Return 1 if current token is type `t`,
@@ -131,7 +155,7 @@ lex_consumef(struct lexer *l, enum tok_type t) {
 int
 tok_strm_readf(char *buf, struct lexer *l) {
     int i = 0;
-    while (lex_scan(l)) {
+    while (lex_scan(l) != LILC_TOK_EOS) {
         i += sprintf(buf + i, "<");
         switch (l->tok.cls) {
             case LILC_TOK_DBL:
@@ -149,10 +173,4 @@ tok_strm_readf(char *buf, struct lexer *l) {
         i += sprintf(buf + i, ">");
     }
     return i;
-}
-
-void
-lex_init(struct lexer *l, char *source) {
-    l->source = source;
-    l->offset = 0;
 }

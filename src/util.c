@@ -6,10 +6,12 @@
 #include "util.h"
 
 void
-die (char *file, int line, int err) {
-    fprintf(stderr, "%s:%d - %s\n", file, line, strerror(err));
+die(char *file, int line, char *msg) {
+    fprintf(stderr, "%s:%d - %s\n", file, line, msg);
     exit(1);
 }
+
+#define DIE() (die(__FILE__, __LINE__, strerror(errno)))
 
 // Return the size of a file or -1
 size_t
