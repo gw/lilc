@@ -27,6 +27,7 @@ struct vtable {
 // Forward declarations
 struct vtable vtables[];
 static struct lilc_node_t *expression(struct parser *p, int rbp);
+static struct lilc_node_t * block(struct parser *p);
 
 /*
  * `as_prefix` and `as_infix` (`nud` and `led` respectively in Pratt's lingo)
@@ -125,7 +126,7 @@ funcdef_prefix(struct parser *p, struct token t) {
     lex_consumef(p->lex, LILC_TOK_RPAREN);
     lex_consumef(p->lex, LILC_TOK_LCURL);
 
-    struct lilc_node_t *body = expression(p, 0);
+    struct lilc_node_t *body = block(p);
 
     lex_consumef(p->lex, LILC_TOK_RCURL);
 
@@ -220,7 +221,7 @@ block(struct parser *p) {
     // If this is the top-level block that represents the series of expr_stmts
     // that constitute the whole program, it won't be surrounded by curlies.
     // If it's a sub-block, it will be.
-    while (!lex_is(p->lex, LILC_TOK_EOS) && !lex_is(p->lex, LILC_TOK_RPAREN)) {
+    while (!lex_is(p->lex, LILC_TOK_EOS) && !lex_is(p->lex, LILC_TOK_RCURL)) {
         if (!(node = expr_stmt(p))) return NULL;
         lilc_node_vec_push(*stmts, node);
     }
