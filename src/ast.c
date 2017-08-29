@@ -15,6 +15,12 @@ char *lilc_node_str[] = {
   [LILC_NODE_FUNCDEF] = "funcdef",
 };
 
+lilc_node_vec_t *
+lilc_node_vec_new(void) {
+    lilc_node_vec_t *vec = (lilc_node_vec_t *)malloc(sizeof(lilc_node_vec_t));
+    kv_init(*vec);
+    return vec;
+}
 
 struct lilc_dbl_node_t *
 lilc_dbl_node_new(double val) {
@@ -25,11 +31,10 @@ lilc_dbl_node_new(double val) {
 };
 
 struct lilc_block_node_t *
-lilc_block_node_new(void) {
+lilc_block_node_new(lilc_node_vec_t *stmts) {
     struct lilc_block_node_t *node = malloc(sizeof(struct lilc_block_node_t));
     node->base.type = LILC_NODE_BLOCK;
-    node->stmts = (node_vec_t *)malloc(sizeof(node_vec_t));
-    kv_init(*node->stmts);
+    node->stmts = stmts;
     return node;
 };
 

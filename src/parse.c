@@ -203,29 +203,37 @@ expression(struct parser *p, int rbp) {
     return left;
 }
 
-// funcdef |
 // expression SEMI
 static struct lilc_node_t *
-stmt(struct parser *p) {
-    return expression(p, 0);
+expr_stmt(struct parser *p) {
+    struct lilc_node_t *node = expression(p, 0);
+    lex_consumef(p->lex, LILC_TOK_SEMI);
+    return node;
 }
 
-// stmt+
+// expr_stmt+
 static struct lilc_node_t *
-program(struct parser *p) {
+block(struct parser *p) {
+    lilc_node_vec_t *stmts = lilc_node_vec_new();
     struct lilc_node_t *node;
-    struct lilc_block_node_t *block = lilc_block_node_new();
 
-    lex_scan(p->lex);  // Load first token
-
-    while (!lex_is(p->lex, LILC_TOK_EOS)) {
-        if (!(node = stmt(p))) return NULL;
-        kv_push(struct lilc_node_t *, *block->stmts, node);
-        lex_consumef(p->lex, LILC_TOK_SEMI);
+    // If this is the top-level block that represents the series of expr_stmts
+    // that constitute the whole program, it won't be surrounded by curlies.
+    // If it's a sub-block, it will be.
+    while (!lex_is(p->lex, LILC_TOK_EOS) && !lex_is(p->lex, LILC_TOK_RPAREN)) {
+        if (!(node = expr_stmt(p))) return NULL;
+        lilc_node_vec_push(*stmts, node);
     }
 
-    // TODO check if EOS or error and respond appropriately
-    return (struct lilc_node_t *)block;
+    return (struct lilc_node_t *)lilc_block_node_new(stmts);
+}
+
+// block
+static struct lilc_node_t *
+program(struct parser *p) {
+    lex_scan(p->lex);  // Load first token
+    return block(p);
+
 }
 
 // Parse a Lilc program. Returns a pointer to the root node

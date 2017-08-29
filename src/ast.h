@@ -16,6 +16,13 @@ enum node_type {
 };
 
 /*
+ * Dynamic array of AST nodes
+ */
+typedef kvec_t(struct lilc_node_t *) lilc_node_vec_t;
+lilc_node_vec_t *lilc_node_vec_new(void);
+#define lilc_node_vec_push(vec, node) kv_push(struct lilc_node_t *, vec, node)
+
+/*
  * Containers for each node type
  */
 
@@ -25,10 +32,9 @@ struct lilc_node_t {
 };
 
 // Block node
-typedef kvec_t(struct lilc_node_t *) node_vec_t;
 struct lilc_block_node_t {
     struct lilc_node_t base;
-    node_vec_t *stmts;
+    lilc_node_vec_t *stmts;
 };
 
 // Double immediate node
@@ -96,7 +102,7 @@ struct lilc_dbl_node_t *
 lilc_dbl_node_new(double val);
 
 struct lilc_block_node_t *
-lilc_block_node_new(void);
+lilc_block_node_new(lilc_node_vec_t *stmts);
 
 struct lilc_var_node_t *
 lilc_var_node_new(char *name);
