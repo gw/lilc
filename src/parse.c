@@ -67,6 +67,7 @@ lparen_infix(struct parser *p, struct token t, struct lilc_node_t *left) {
     struct lilc_node_t *args[MAX_FUNC_PARAMS];
     struct lilc_node_t *arg;
     unsigned int arg_count = 0;
+
     while (!lex_is(p->lex, LILC_TOK_RPAREN) && arg_count <= MAX_FUNC_PARAMS) {
         if (!(arg = expression(p, 0))) {
             return err(p, "Could not parse call argument\n");
@@ -76,6 +77,7 @@ lparen_infix(struct parser *p, struct token t, struct lilc_node_t *left) {
 
         lex_consume(p->lex, LILC_TOK_COMMA);
     }
+
     lex_consumef(p->lex, LILC_TOK_RPAREN);
 
     char *name = ((struct lilc_var_node_t *)left)->name;
@@ -97,9 +99,9 @@ bin_op_infix(struct parser *p, struct token t, struct lilc_node_t *left) {
 // "def"
 static struct lilc_node_t *
 funcdef_prefix(struct parser *p, struct token t) {
-    char *name = p->lex->tok.val.as_str;
-    lex_consumef(p->lex, LILC_TOK_ID);
+    char *funcname = p->lex->tok.val.as_str;
 
+    lex_consumef(p->lex, LILC_TOK_ID);
     lex_consumef(p->lex, LILC_TOK_LPAREN);
 
     // Parse parameter list
@@ -109,7 +111,9 @@ funcdef_prefix(struct parser *p, struct token t) {
         if (!lex_is(p->lex, LILC_TOK_ID)) {
             return err(p, "funcdef params: Expected identifier\n");
         }
+
         params[param_count++] = p->lex->tok.val.as_str;
+
         lex_scan(p->lex);
         lex_consume(p->lex, LILC_TOK_COMMA);
     }
@@ -125,7 +129,7 @@ funcdef_prefix(struct parser *p, struct token t) {
 
     lex_consumef(p->lex, LILC_TOK_RCURL);
 
-    struct lilc_proto_node_t *proto = lilc_proto_node_new(name, params, param_count);
+    struct lilc_proto_node_t *proto = lilc_proto_node_new(funcname, params, param_count);
     return (struct lilc_node_t *)lilc_funcdef_node_new(proto, body);
 }
 
@@ -177,6 +181,7 @@ expression(struct parser *p, int rbp) {
 
     t = p->lex->tok;
     lex_scan(p->lex);
+
     if (!vtables[t.cls].as_prefix) {
         return err(p, "expression: No prefix function found\n");
     }
@@ -188,11 +193,13 @@ expression(struct parser *p, int rbp) {
     while (rbp < vtables[p->lex->tok.cls].lbp) {
         t = p->lex->tok;
         lex_scan(p->lex);
+
         if (!vtables[t.cls].as_infix) {
             return err(p, "expression: No infix function found\n");
         }
         left = vtables[t.cls].as_infix(p, t, left);
     }
+
     return left;
 }
 
@@ -210,6 +217,7 @@ program(struct parser *p) {
     struct lilc_block_node_t *block = lilc_block_node_new();
 
     lex_scan(p->lex);  // Load first token
+
     while (!lex_is(p->lex, LILC_TOK_EOS)) {
         if (!(node = stmt(p))) return NULL;
         kv_push(struct lilc_node_t *, *block->stmts, node);

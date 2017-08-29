@@ -27,7 +27,7 @@ set_tok_type(struct lexer *l, enum tok_type t) {
 }
 
 static void
-lex_putback(struct lexer *l) {
+putback(struct lexer *l) {
     l->offset--;
 }
 
@@ -47,7 +47,7 @@ consume_id(struct lexer *l, char c) {
         i < MAX_IDENT - 1
     );
     buf[i] = '\0';
-    lex_putback(l);
+    putback(l);
 
     if (strcmp(buf, "def") == 0) {
         return set_tok_type(l, LILC_TOK_DEF);
@@ -66,7 +66,7 @@ consume_number(struct lexer *l, char c) {
     do {
         n = n * 10 + (c - '0');
     } while (isdigit(c = l->source[l->offset++]));
-    lex_putback(l);
+    putback(l);
 
     l->tok.val.as_dbl = n;
     return set_tok_type(l, LILC_TOK_DBL);
