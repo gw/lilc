@@ -13,6 +13,7 @@ enum node_type {
     LILC_NODE_PROTO,
     LILC_NODE_FUNCDEF,
     LILC_NODE_FUNCCALL,
+    LILC_NODE_IF,
 };
 
 /*
@@ -80,6 +81,14 @@ struct lilc_funccall_node_t {
     unsigned int arg_count;
 };
 
+// If / else if / else node
+struct lilc_if_node_t {
+    struct lilc_node_t base;
+    struct lilc_node_t *cond;
+    struct lilc_block_node_t *then_block;
+    struct lilc_block_node_t *else_block;
+};
+
 // Union struct--ends up being the width of the largest
 // member. Only used in places where you need to allocate
 // space for an AST node whose type you don't know in advance
@@ -118,6 +127,9 @@ lilc_funcdef_node_new(struct lilc_proto_node_t *proto, struct lilc_node_t *body)
 
 struct lilc_funccall_node_t *
 lilc_funccall_node_new(char *name, struct lilc_node_t **args, unsigned int arg_count);
+
+struct lilc_if_node_t *
+lilc_if_node_new(struct lilc_node_t *cond, struct lilc_block_node_t *then_block);
 
 int
 ast_readf(char *buf, int i, struct lilc_node_t *node);

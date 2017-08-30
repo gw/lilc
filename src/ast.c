@@ -13,6 +13,7 @@
 char *lilc_node_str[] = {
   [LILC_NODE_PROTO] = "proto",
   [LILC_NODE_FUNCDEF] = "funcdef",
+  [LILC_NODE_IF] = "if",
 };
 
 lilc_node_vec_t *
@@ -98,6 +99,16 @@ lilc_funccall_node_new(char *name, struct lilc_node_t **args, unsigned int arg_c
     return node;
 }
 
+struct lilc_if_node_t *
+lilc_if_node_new(struct lilc_node_t *cond, struct lilc_block_node_t *then_block) {
+    struct lilc_if_node_t *node = malloc(sizeof(struct lilc_if_node_t));
+    node->base.type = LILC_NODE_IF;
+    node->cond = cond;
+    node->then_block = then_block;
+    node->else_block = NULL;
+    return node;
+}
+
 // Read a formatted version of an AST into a buffer, returning the number of
 // bytes written.
 int
@@ -158,6 +169,17 @@ ast_readf(char *buf, int i, struct lilc_node_t *node) {
             i += sprintf(buf + i, "call %s", n->name);
             for (int j = 0; j < n->arg_count; j++) {
                 i = ast_readf(buf, i, n->args[j]);
+            }
+            break;
+        }
+        case LILC_NODE_IF: {
+            struct lilc_if_node_t *n = (struct lilc_if_node_t *)node;
+            i += sprintf(buf + i, "%s ", lilc_node_str[n->base.type]);
+            i = ast_readf(buf, i, n->cond);
+            i = ast_readf(buf, i, n->then_block);
+            if (n->else_block) {
+                i += sprintf(buf + i, " else ");
+                i = ast_readf(buf, i, n->else_block);
             }
             break;
         }

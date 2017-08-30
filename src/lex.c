@@ -49,13 +49,14 @@ consume_id(struct lexer *l, char c) {
     buf[i] = '\0';
     putback(l);
 
-    if (strcmp(buf, "def") == 0) {
-        return set_tok_type(l, LILC_TOK_DEF);
-    } else {
-        // Non-keyword identifier
-        l->tok.val.as_str = strdup(buf);
-        return set_tok_type(l, LILC_TOK_ID);
-    }
+    // Keywords
+    if (strcmp(buf, "def") == 0) return set_tok_type(l, LILC_TOK_DEF);
+    if (strcmp(buf, "if") == 0) return set_tok_type(l, LILC_TOK_IF);
+    if (strcmp(buf, "else") == 0) return set_tok_type(l, LILC_TOK_ELSE);
+
+    // Non-keyword identifier
+    l->tok.val.as_str = strdup(buf);
+    return set_tok_type(l, LILC_TOK_ID);
 }
 
 // Tokenize an entire number.

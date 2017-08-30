@@ -13,12 +13,19 @@ funcdef =>
     DEF ID LPAREN ID {COMMA ID} RPAREN LCURL expr RCURL
 call =>
     ID LPAREN expr{,expr} RPAREN
+if =>
+    IF LPAREN expr RPAREN LCURL block RCURL elif* else?
+elif =>
+    ELSE IF LPAREN expr RPAREN LCURL block RCURL
+else =>
+    ELSE LCURL block RCURL
 expr =>
     expr ADD term |
     expr SUB term |
     term          |
     call          |
-    funcdef
+    funcdef       |
+    if
 term =>
     term MUL factor |
     term DIV factor |

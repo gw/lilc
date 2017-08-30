@@ -18,6 +18,8 @@ enum tok_type {
     LILC_TOK_MUL,
     LILC_TOK_DIV,
     LILC_TOK_CMPLT,
+    LILC_TOK_IF,
+    LILC_TOK_ELSE,
 };
 
 struct token {

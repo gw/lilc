@@ -47,6 +47,40 @@ id_prefix(struct parser *p, struct token t) {
     return (struct lilc_node_t *)lilc_var_node_new(t.val.as_str);
 }
 
+// if / else if / else
+static struct lilc_node_t *
+if_prefix(struct parser *p, struct token t) {
+    lex_consumef(p->lex, LILC_TOK_LPAREN);
+
+    struct lilc_node_t *cond = expression(p, 0);
+
+    lex_consumef(p->lex, LILC_TOK_RPAREN);
+    lex_consumef(p->lex, LILC_TOK_LCURL);
+
+    struct lilc_block_node_t *then_block = block(p);
+
+    lex_consumef(p->lex, LILC_TOK_RCURL);
+
+    struct lilc_if_node_t *node = lilc_if_node_new(cond, then_block);
+    if (!node) {
+        return err(p->lex, "if: Could not allocate 'if' node\n");
+    }
+
+    if (lex_consume(p->lex, LILC_TOK_ELSE)) {
+        lex_consumef(p->lex, LILC_TOK_LCURL);
+
+        struct lilc_block_node_t *else_block = block(p);
+        if (!(node->else_block = block(p))) {
+            return err(p->lex, "if: Could not parse 'else' block\n");
+        }
+        node->else_block = else_block;
+
+        lex_consumef(p->lex, LILC_TOK_RCURL);
+    }
+
+    return (struct lilc_node_t *)node;
+}
+
 // Parenthesized arithmetic expressions
 static struct lilc_node_t *
 lparen_prefix(struct parser *p, struct token t) {
@@ -138,6 +172,7 @@ funcdef_prefix(struct parser *p, struct token t) {
 // Note that prefix-only operators don't need a
 // binding power--prefix functions are always called.
 struct vtable vtables[] = {
+    // Keywords
     [LILC_TOK_DEF] = {
         .as_prefix = funcdef_prefix,
     },
@@ -147,6 +182,10 @@ struct vtable vtables[] = {
     [LILC_TOK_ID] = {
         .as_prefix = id_prefix,
     },
+    [LILC_TOK_IF] = {
+        .as_prefix = if_prefix,
+    },
+    // Operators
     [LILC_TOK_CMPLT] = {
         .lbp = 1,
         .as_infix = bin_op_infix,

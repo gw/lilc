@@ -19,4 +19,6 @@ char *lilc_token_str[] = {
   [LILC_TOK_MUL] = "*",
   [LILC_TOK_DIV] = "/",
   [LILC_TOK_CMPLT] = "<",
+  [LILC_TOK_IF] = "if",
+  [LILC_TOK_ELSE] = "else",
 };
