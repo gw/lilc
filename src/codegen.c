@@ -212,6 +212,12 @@ codegen_binop(struct lilc_bin_op_node_t *node, LLVMModuleRef module,
         case LILC_TOK_DIV: {
             return LLVMBuildFDiv(builder, lhs, rhs, "divtmp");
         }
+        case LILC_TOK_CMPLT: {
+            LLVMValueRef cmp_result = LLVMBuildFCmp(builder, LLVMRealULT, lhs, rhs, "cmptmp");
+            // LLVM docs specify that FP comparisons return bools--we need to cast to FP
+            // 1.0 or 0.0 because Lilc doesn't have a bool type just yet.
+            return LLVMBuildUIToFP(builder, cmp_result, LLVMDoubleType(), "boolcasttmp");
+        }
     }
     return NULL;
 }

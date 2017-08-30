@@ -135,9 +135,37 @@ funcdef_prefix(struct parser *p, struct token t) {
 }
 
 // Lookup array for token vtable implementations
+// Note that prefix-only operators don't need a
+// binding power--prefix functions are always called.
 struct vtable vtables[] = {
     [LILC_TOK_DEF] = {
         .as_prefix = funcdef_prefix,
+    },
+    [LILC_TOK_DBL] = {
+        .as_prefix = dbl_prefix,
+    },
+    [LILC_TOK_ID] = {
+        .as_prefix = id_prefix,
+    },
+    [LILC_TOK_CMPLT] = {
+        .lbp = 1,
+        .as_infix = bin_op_infix,
+    },
+    [LILC_TOK_ADD] = {
+        .lbp = 2,
+        .as_infix = bin_op_infix,
+    },
+    [LILC_TOK_SUB] = {
+        .lbp = 2,
+        .as_infix = bin_op_infix,
+    },
+    [LILC_TOK_MUL] = {
+        .lbp = 3,
+        .as_infix = bin_op_infix,
+    },
+    [LILC_TOK_DIV] = {
+        .lbp = 3,
+        .as_infix = bin_op_infix,
     },
     [LILC_TOK_LPAREN] = {
         // If this had a 0 lbp, then when parsing a function call,
@@ -148,28 +176,6 @@ struct vtable vtables[] = {
         .lbp = 10,
         .as_prefix = lparen_prefix,
         .as_infix = lparen_infix,
-    },
-    [LILC_TOK_ADD] = {
-        .lbp = 1,
-        .as_infix = bin_op_infix,
-    },
-    [LILC_TOK_SUB] = {
-        .lbp = 1,
-        .as_infix = bin_op_infix,
-    },
-    [LILC_TOK_MUL] = {
-        .lbp = 2,
-        .as_infix = bin_op_infix,
-    },
-    [LILC_TOK_DIV] = {
-        .lbp = 2,
-        .as_infix = bin_op_infix,
-    },
-    [LILC_TOK_DBL] = {
-        .as_prefix = dbl_prefix,
-    },
-    [LILC_TOK_ID] = {
-        .as_prefix = id_prefix,
     },
 };
 

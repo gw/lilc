@@ -93,6 +93,7 @@ _lex_scan(struct lexer *l) {
             case '-': return set_tok_type(l, LILC_TOK_SUB);
             case '*': return set_tok_type(l, LILC_TOK_MUL);
             case '/': return set_tok_type(l, LILC_TOK_DIV);
+            case '<': return set_tok_type(l, LILC_TOK_CMPLT);
             case '\0': return set_tok_type(l, LILC_TOK_EOS);
             default:
                 if (isalpha(c)) return consume_id(l, c);
@@ -142,7 +143,7 @@ lex_consumef(struct lexer *l, enum tok_type t) {
         snprintf(
             buf,
             128,
-            "Expected '%s' but saw '%s'\n",
+            "consumef: Expected '%s' but saw '%s'\n",
             lilc_token_str[t],
             lilc_token_str[l->tok.cls]
         );

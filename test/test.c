@@ -97,6 +97,7 @@ main() {
     test_codegen("src_examples/arith_basic.lilc", "codegen/arith_basic.result");
     test_codegen("src_examples/func_basic.lilc", "codegen/func_basic.result");
     test_codegen("src_examples/func_no_params.lilc", "codegen/func_no_params.result");
+    test_codegen("src_examples/cmp_basic.lilc", "codegen/cmp_basic.result");
 
     return 0;
 }
