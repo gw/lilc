@@ -57,21 +57,21 @@ if_prefix(struct parser *p, struct token t) {
     lex_consumef(p->lex, LILC_TOK_RPAREN);
     lex_consumef(p->lex, LILC_TOK_LCURL);
 
-    struct lilc_block_node_t *then_block = block(p);
+    struct lilc_block_node_t *then_block = (struct lilc_block_node_t *)block(p);
 
     lex_consumef(p->lex, LILC_TOK_RCURL);
 
     struct lilc_if_node_t *node = lilc_if_node_new(cond, then_block);
     if (!node) {
-        return err(p->lex, "if: Could not allocate 'if' node\n");
+        return err(p, "if: Could not allocate 'if' node\n");
     }
 
     if (lex_consume(p->lex, LILC_TOK_ELSE)) {
         lex_consumef(p->lex, LILC_TOK_LCURL);
 
-        struct lilc_block_node_t *else_block = block(p);
-        if (!(node->else_block = block(p))) {
-            return err(p->lex, "if: Could not parse 'else' block\n");
+        struct lilc_block_node_t *else_block = (struct lilc_block_node_t *)block(p);
+        if (!(node->else_block = (struct lilc_block_node_t *)block(p))) {
+            return err(p, "if: Could not parse 'else' block\n");
         }
         node->else_block = else_block;
 
