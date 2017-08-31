@@ -291,7 +291,8 @@ codegen_funcdef(struct lilc_funcdef_node_t *node, LLVMModuleRef module,
 
     // Verify function.
     if(LLVMVerifyFunction(func, LLVMPrintMessageAction) == 1) {
-        fprintf(stderr, "Invalid function\n");
+        fprintf(stderr, "Invalid function--dump:\n");
+        LLVMDumpModule(module);
         LLVMDeleteFunction(func);
         return NULL;
     }
