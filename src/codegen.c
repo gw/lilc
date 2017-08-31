@@ -326,6 +326,65 @@ codegen_funccall(struct lilc_funccall_node_t *node, LLVMModuleRef module,
     return LLVMBuildCall(builder, func, args, node->arg_count, node->name);
 }
 
+static LLVMValueRef
+codegen_if(struct lilc_if_node_t *node, LLVMModuleRef module,
+           LLVMBuilderRef builder, cfuhash_table_t *named_vals) {
+    LLVMValueRef cond = do_codegen(node->cond, module, builder, named_vals);
+    if (!cond) return NULL;
+
+    // Convert condition from double to bool by comparing
+    // it with the double zero.
+    LLVMValueRef zero = LLVMConstReal(LLVMDoubleType(), 0);
+    cond = LLVMBuildFCmp(builder, LLVMRealONE, cond, zero, "ifcond");
+
+    // Get a reference to the function that we're currently in and append
+    // our conditional blocks to it
+    LLVMValueRef func = LLVMGetBasicBlockParent(LLVMGetInsertBlock(builder));
+    LLVMBasicBlockRef then_block = LLVMAppendBasicBlock(func, "then");
+    LLVMBasicBlockRef else_block = LLVMAppendBasicBlock(func, "else");
+    LLVMBasicBlockRef merge_block = LLVMAppendBasicBlock(func, "ifcont");
+
+    // Generate the branch instruction using the condition
+    // we just translated
+    LLVMBuildCondBr(builder, cond, then_block, else_block);
+
+    // Generate 'then' block.
+    LLVMPositionBuilderAtEnd(builder, then_block);
+    LLVMValueRef then_value = do_codegen(node->then_block, module, builder, named_vals);
+    if(then_value == NULL) return NULL;
+
+    // Unconditional branch from then_block to merge_block
+    LLVMBuildBr(builder, merge_block);
+
+    // `do_codegen` can change the current insert block, e.g.
+    // with a nested if/else, so we need to get the latest position
+    then_block = LLVMGetInsertBlock(builder);
+
+    // Generate 'else' block
+    LLVMPositionBuilderAtEnd(builder, else_block);
+    LLVMValueRef else_value = do_codegen(node->else_block, module, builder, named_vals);
+    if(else_value == NULL) return NULL;
+
+    // Unconditional branch from else_block to merge block
+    LLVMBuildBr(builder, merge_block);
+
+    // Get latest cursor position again
+    else_block = LLVMGetInsertBlock(builder);
+
+    // Build phi op, see: https://en.wikipedia.org/wiki/Static_single_assignment_form
+    LLVMPositionBuilderAtEnd(builder, merge_block);
+    LLVMValueRef phi = LLVMBuildPhi(builder, LLVMDoubleType (), "ifphitmp");
+    LLVMAddIncoming(phi, &then_value, &then_block, 1);
+    LLVMAddIncoming(phi, &else_value, &else_block, 1);
+
+    // Note that we don't build a ret instruction--if/else expressions currently evaluate
+    // to these phi instructions, which will be returned in whatever top-level function
+    // contains this if/else. i.e. the function that contains this if/else will add the
+    // terminator to `merge_block` (all basic blocks in LLVM require terminators, see
+    // llvm-c/Core.h:2814 and https://llvm.org/docs/LangRef.html#functionstructure
+    return phi;
+}
+
 // Recursively walk an AST and generate LLVM IR
 static LLVMValueRef
 do_codegen(struct lilc_node_t *node, LLVMModuleRef module,
@@ -351,6 +410,9 @@ do_codegen(struct lilc_node_t *node, LLVMModuleRef module,
         }
         case LILC_NODE_FUNCCALL: {
             return codegen_funccall((struct lilc_funccall_node_t *)node, module, builder, named_vals);
+        }
+        case LILC_NODE_IF: {
+            return codegen_if((struct lilc_if_node_t *)node, module, builder, named_vals);
         }
     }
     return NULL;
