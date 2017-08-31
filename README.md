@@ -12,7 +12,10 @@ expr_stmt =>
 funcdef =>
     DEF ID LPAREN ID {COMMA ID} RPAREN LCURL block RCURL
 call =>
-    ID LPAREN expr{,expr} RPAREN
+    ID LPAREN (params | E) RPAREN
+params =>
+    params, id |
+    id
 if =>
     IF LPAREN expr RPAREN LCURL block RCURL elif* else?
 elif =>
