@@ -1,5 +1,9 @@
 (block
-(funcdef (main[])(block
-(* (+ (dbl 1.0)(dbl 2.0))(dbl 3.0))
-))
-)
+  (funcdef
+    (main[])
+    (block
+      (*
+        (+
+          (dbl 1.0)
+          (dbl 2.0))
+        (dbl 3.0)))))

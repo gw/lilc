@@ -51,7 +51,7 @@ test_parser(char *src_path, char *want_path) {
     int b = ast_readf(got, 0, 0, node);
 
     assert(b < MAX_NODES);
-    // assert(0 == strcmp(want, got));
+    assert(0 == strcmp(want, got));
 
     free(src);
     free(want);
