@@ -132,6 +132,6 @@ struct lilc_if_node_t *
 lilc_if_node_new(struct lilc_node_t *cond, struct lilc_block_node_t *then_block);
 
 int
-ast_readf(char *buf, int i, struct lilc_node_t *node);
+ast_readf(char *buf, int i, int indent, struct lilc_node_t *node);
 
 #endif

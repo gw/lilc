@@ -31,7 +31,7 @@ test_lexer(char *src_path, char *want_path) {
     free(want);
 }
 
-#define MAX_NODES 128  // Max length of formatted AST
+#define MAX_NODES 512  // Max length of formatted AST
 
 static void
 test_parser(char *src_path, char *want_path) {
@@ -47,8 +47,8 @@ test_parser(char *src_path, char *want_path) {
     node = parse(&p);
 
     char got[MAX_NODES] = {0};
-    int b = ast_readf(got, 0, node);
     // fprintf(stderr, "AST: %s\n", got);
+    int b = ast_readf(got, 0, 0, node);
 
     assert(b < MAX_NODES);
     // assert(0 == strcmp(want, got));
