@@ -10,7 +10,7 @@ block => expr_stmt+
 expr_stmt =>
     expr SEMI
 funcdef =>
-    DEF ID LPAREN ID {COMMA ID} RPAREN LCURL expr RCURL
+    DEF ID LPAREN ID {COMMA ID} RPAREN LCURL block RCURL
 call =>
     ID LPAREN expr{,expr} RPAREN
 if =>
