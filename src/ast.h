@@ -20,7 +20,10 @@ enum node_type {
  * Dynamic array of AST nodes
  */
 typedef kvec_t(struct lilc_node_t *) lilc_node_vec_t;
-lilc_node_vec_t *lilc_node_vec_new(void);
+
+lilc_node_vec_t *
+lilc_node_vec_new(void);
+
 #define lilc_node_vec_push(vec, node) kv_push(struct lilc_node_t *, vec, node)
 
 /*

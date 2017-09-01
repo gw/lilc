@@ -15,11 +15,22 @@ struct lexer {
 };
 
 
-void lex_init(struct lexer *l, char *source, char *path);
-int lex_is(struct lexer *l, enum tok_type t);
-int lex_consume(struct lexer *l, enum tok_type t);
-int lex_consumef(struct lexer *l, enum tok_type t);
-enum tok_type lex_scan(struct lexer *l);
-int tok_strm_readf(char *buf, struct lexer *l);
+void
+lex_init(struct lexer *l, char *source, char *path);
+
+int
+lex_is(struct lexer *l, enum tok_type t);
+
+int
+lex_consume(struct lexer *l, enum tok_type t);
+
+int
+lex_consumef(struct lexer *l, enum tok_type t);
+
+enum tok_type
+lex_scan(struct lexer *l);
+
+int
+tok_strm_readf(char *buf, struct lexer *l);
 
 #endif
