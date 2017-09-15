@@ -16,6 +16,11 @@ err(struct parser *p, char *msg) {
     return NULL;
 }
 
+void
+parser_init(struct parser *p, struct lexer *l) {
+    p->lex = l;
+}
+
 // Interface for parsing-related functionality for each token type.
 struct vtable {
     int lbp;  // Left Binding Power
@@ -35,19 +40,25 @@ static struct lilc_node_t * block(struct parser *p);
  * TODO: Implement error checking, otherwise it'll SEGFAULT on bad input
  */
 
-// double
+/*
+DBL
+*/
 static struct lilc_node_t *
 dbl_prefix(struct parser *p, struct token t) {
     return (struct lilc_node_t *)lilc_dbl_node_new(t.val.as_dbl);
 }
 
-// identifier
+/*
+ID
+*/
 static struct lilc_node_t *
 id_prefix(struct parser *p, struct token t) {
     return (struct lilc_node_t *)lilc_var_node_new(t.val.as_str);
 }
 
-// if / else if / else
+/*
+if => IF LPAREN expr RPAREN LCURL block RCURL elif* else?
+*/
 static struct lilc_node_t *
 if_prefix(struct parser *p, struct token t) {
     lex_consumef(p->lex, LILC_TOK_LPAREN);
@@ -81,7 +92,9 @@ if_prefix(struct parser *p, struct token t) {
     return (struct lilc_node_t *)node;
 }
 
-// Parenthesized arithmetic expressions
+/*
+factor => LPAREN expr RPAREN
+*/
 static struct lilc_node_t *
 lparen_prefix(struct parser *p, struct token t) {
     // 0 rbp here b/c we obviously want to
@@ -96,7 +109,10 @@ lparen_prefix(struct parser *p, struct token t) {
 
 #define MAX_FUNC_PARAMS 16
 
-// Function calls
+
+/*
+call => ID LPAREN (params | E) RPAREN
+*/
 static struct lilc_node_t *
 lparen_infix(struct parser *p, struct token t, struct lilc_node_t *left) {
     struct lilc_node_t *args[MAX_FUNC_PARAMS];
@@ -119,7 +135,19 @@ lparen_infix(struct parser *p, struct token t, struct lilc_node_t *left) {
     return (struct lilc_node_t *)lilc_funccall_node_new(name, args, arg_count);
 }
 
-// "+", "-", "*", "/"
+/*
+expr =>
+    expr CMPLT term0 |
+    term0            |
+term0 =>
+    term0 ADD term1   |
+    term0 SUB term1   |
+    term1
+term1 =>
+    term1 MUL term2 |
+    term1 DIV term2 |
+    term2
+*/
 static struct lilc_node_t *
 bin_op_infix(struct parser *p, struct token t, struct lilc_node_t *left) {
     struct lilc_node_t *right = expression(p, vtables[t.cls].lbp);
@@ -131,7 +159,10 @@ bin_op_infix(struct parser *p, struct token t, struct lilc_node_t *left) {
     return (struct lilc_node_t *)lilc_bin_op_node_new(left, right, t.cls);
 }
 
-// "def"
+
+/*
+funcdef => DEF ID LPAREN ID {COMMA ID} RPAREN LCURL block RCURL
+*/
 static struct lilc_node_t *
 funcdef_prefix(struct parser *p, struct token t) {
     char *funcname = p->lex->tok.val.as_str;
@@ -172,12 +203,13 @@ funcdef_prefix(struct parser *p, struct token t) {
 // Note that prefix-only operators don't need a
 // binding power--prefix functions are always called.
 struct vtable vtables[] = {
+    // Constants
+    [LILC_TOK_DBL] = {
+        .as_prefix = dbl_prefix,
+    },
     // Keywords
     [LILC_TOK_DEF] = {
         .as_prefix = funcdef_prefix,
-    },
-    [LILC_TOK_DBL] = {
-        .as_prefix = dbl_prefix,
     },
     [LILC_TOK_ID] = {
         .as_prefix = id_prefix,
@@ -213,8 +245,8 @@ struct vtable vtables[] = {
         // the LPAREN, whereas we want the entire function call to be
         // treated as a single expression.
         .lbp = 10,
-        .as_prefix = lparen_prefix,
-        .as_infix = lparen_infix,
+        .as_prefix = lparen_prefix,  // Parenthesized expressions
+        .as_infix = lparen_infix,    // Function calls
     },
 };
 
@@ -249,7 +281,10 @@ expression(struct parser *p, int rbp) {
     return left;
 }
 
-// expression SEMI
+
+/*
+expr_stmt => expr SEMI
+*/
 static struct lilc_node_t *
 expr_stmt(struct parser *p) {
     struct lilc_node_t *node = expression(p, 0);
@@ -257,7 +292,10 @@ expr_stmt(struct parser *p) {
     return node;
 }
 
-// expr_stmt+
+
+/*
+block => expr_stmt+
+*/
 static struct lilc_node_t *
 block(struct parser *p) {
     lilc_node_vec_t *stmts = lilc_node_vec_new();
@@ -274,7 +312,9 @@ block(struct parser *p) {
     return (struct lilc_node_t *)lilc_block_node_new(stmts);
 }
 
-// block
+/*
+program => block
+*/
 static struct lilc_node_t *
 program(struct parser *p) {
     lex_scan(p->lex);  // Load first token
@@ -291,9 +331,4 @@ parse(struct parser *p) {
         die(p->lex->filename, p->lex->lineno, p->err);
     }
     return root;
-}
-
-void
-parser_init(struct parser *p, struct lexer *l) {
-    p->lex = l;
 }
